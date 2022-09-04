@@ -12,7 +12,18 @@ public class Page
     public Page(PageImage pageImage, Assembly fontAssembly, string fontNamespace, int sideMargin, bool checkExcludedLetter)
     {
         PageImage = pageImage;
-        FillBigLetterList(fontAssembly, fontNamespace);
+
+        try
+        {
+            FillBigLetterList(fontAssembly, fontNamespace);
+        }
+        catch (Exception ex)
+        {
+            using FileStream Stream = new("test.txt", FileMode.Create, FileAccess.Write);
+            using StreamWriter Writer = new(Stream);
+            Writer.WriteLine(ex.Message);
+        }
+
         GetPageTopAndBottom(PageImage, out int TopY, out int BottomY);
         GetContentTopAndBottom(PageImage, ref TopY, ref BottomY, out int TitleTop, out int TitleBottom, out int ProgressTop, out int ProgressBottom);
         PageTop = TitleBottom;
