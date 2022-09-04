@@ -9,23 +9,23 @@ using System.Reflection;
 
 public class Page
 {
-    public Page(PageImage screenshot, Assembly fontAssembly, string fontNamespace, bool checkExcludedLetter)
+    public Page(PageImage pageImage, Assembly fontAssembly, string fontNamespace, int sideMargin, bool checkExcludedLetter)
     {
-        Screenshot = screenshot;
+        PageImage = pageImage;
         FillBigLetterList(fontAssembly, fontNamespace);
-        GetPageTopAndBottom(Screenshot, out int TopY, out int BottomY);
-        GetContentTopAndBottom(Screenshot, ref TopY, ref BottomY, out int TitleTop, out int TitleBottom, out int ProgressTop, out int ProgressBottom);
+        GetPageTopAndBottom(PageImage, out int TopY, out int BottomY);
+        GetContentTopAndBottom(PageImage, ref TopY, ref BottomY, out int TitleTop, out int TitleBottom, out int ProgressTop, out int ProgressBottom);
         PageTop = TitleBottom;
         int TitleLineHeight = TitleBottom - TitleTop;
-        TitleLine = new() { Rect = new(0, TitleTop, screenshot.Width, TitleLineHeight), Baseline = TitleLineHeight };
+        TitleLine = new() { Rect = new(0, TitleTop, PageImage.Width, TitleLineHeight), Baseline = TitleLineHeight };
         int ProgressLineHeight = ProgressBottom - ProgressTop;
-        ProgressLine = new() { Rect = new(0, ProgressTop, screenshot.Width, ProgressLineHeight), Baseline = ProgressLineHeight - 1 };
-        ZoneOfInterest = GetZoneOfInterest(Screenshot, TopY, BottomY);
-        ExcludedLetter = GetExcludedLetter(Screenshot, checkExcludedLetter);
-        RectangleList = GetRectangleList(Screenshot, ZoneOfInterest, ExcludedLetter.Location);
-        LineList = GetScanLineList(Screenshot, RectangleList, ExcludedLetter.Location);
-        WordList = ExtractWordsAndFigures(Screenshot, ZoneOfInterest, LineList, ExcludedLetter.Location);
-        FigureList = GetFigureList(Screenshot, RectangleList);
+        ProgressLine = new() { Rect = new(0, ProgressTop, PageImage.Width, ProgressLineHeight), Baseline = ProgressLineHeight - 1 };
+        ZoneOfInterest = GetZoneOfInterest(PageImage, TopY, BottomY, sideMargin);
+        ExcludedLetter = GetExcludedLetter(PageImage, checkExcludedLetter);
+        RectangleList = GetRectangleList(PageImage, ZoneOfInterest, ExcludedLetter.Location);
+        LineList = GetScanLineList(PageImage, RectangleList, ExcludedLetter.Location);
+        WordList = ExtractWordsAndFigures(PageImage, ZoneOfInterest, LineList, ExcludedLetter.Location);
+        FigureList = GetFigureList(PageImage, RectangleList);
     }
 
     private void FillBigLetterList(Assembly fontAssembly, string fontNamespace)
@@ -61,7 +61,7 @@ public class Page
 
     private static List<BigLetter> BigLetterList = new();
 
-    public PageImage Screenshot { get; }
+    public PageImage PageImage { get; }
     public Rectangle ZoneOfInterest { get; }
     public BigLetter ExcludedLetter { get; private set; }
     public ScanLine TitleLine { get; }
@@ -77,17 +77,17 @@ public class Page
 
     private const int MaxLineHeight = 77;
 
-    private static Rectangle GetZoneOfInterest(PageImage screenshot, int topY, int bottomY)
+    private static Rectangle GetZoneOfInterest(PageImage pageImage, int topY, int bottomY, int sideMargin)
     {
-        int LeftX = 150;
-        int RightX = screenshot.Width - 150;
+        int LeftX = sideMargin;
+        int RightX = pageImage.Width - sideMargin;
 
         int x, y;
 
         for (x = LeftX; x < RightX; x++)
         {
             for (y = topY; y < bottomY; y++)
-                if (!screenshot.IsWhitePixel(x, y))
+                if (!pageImage.IsWhitePixel(x, y))
                     break;
 
             if (y < bottomY)
@@ -100,7 +100,7 @@ public class Page
         for (x = RightX; x > LeftX; x--)
         {
             for (y = topY; y < bottomY; y++)
-                if (!screenshot.IsWhitePixel(x - 1, y))
+                if (!pageImage.IsWhitePixel(x - 1, y))
                     break;
 
             if (y < bottomY)
@@ -113,7 +113,7 @@ public class Page
         for (y = topY; y < bottomY; y++)
         {
             for (x = LeftX; x < RightX; x++)
-                if (!screenshot.IsWhitePixel(x, y))
+                if (!pageImage.IsWhitePixel(x, y))
                     break;
 
             if (x < RightX)
@@ -126,7 +126,7 @@ public class Page
         for (y = bottomY; y > topY; y--)
         {
             for (x = LeftX; x < RightX; x++)
-                if (!screenshot.IsWhitePixel(x, y - 1))
+                if (!pageImage.IsWhitePixel(x, y - 1))
                     break;
 
             if (x < RightX)
@@ -141,65 +141,65 @@ public class Page
         return new Rectangle(LeftX, topY, RightX - LeftX, bottomY - topY);
     }
 
-    private static void GetPageTopAndBottom(PageImage screenshot, out int top, out int bottom)
+    private static void GetPageTopAndBottom(PageImage pageImage, out int top, out int bottom)
     {
-        top = screenshot.Height / 2;
+        top = pageImage.Height / 2;
         bottom = top;
 
-        while (top > 0 && screenshot.IsWhitePixel(0, top - 1))
+        while (top > 0 && pageImage.IsWhitePixel(0, top - 1))
             top--;
 
-        while (bottom < screenshot.Height && screenshot.IsWhitePixel(0, bottom))
+        while (bottom < pageImage.Height && pageImage.IsWhitePixel(0, bottom))
             bottom++;
     }
 
-    private static void GetContentTopAndBottom(PageImage screenshot, ref int top, ref int bottom, out int titleTop, out int titleBottom, out int progressTop, out int progressBottom)
+    private static void GetContentTopAndBottom(PageImage pageImage, ref int top, ref int bottom, out int titleTop, out int titleBottom, out int progressTop, out int progressBottom)
     {
-        Rectangle Rect = new(0, 0, screenshot.Width, screenshot.Height);
+        Rectangle Rect = new(0, 0, pageImage.Width, pageImage.Height);
 
-        DownToLineTop(screenshot, Rect, bottom, ref top);
+        DownToLineTop(pageImage, Rect, bottom, ref top);
         titleTop = top;
-        DownToLineBottom(screenshot, Rect, bottom, ref top);
+        DownToLineBottom(pageImage, Rect, bottom, ref top);
         titleBottom = top;
-        DownToLineTop(screenshot, Rect, bottom, ref top);
+        DownToLineTop(pageImage, Rect, bottom, ref top);
 
-        UpToLineBottom(screenshot, Rect, top, ref bottom);
+        UpToLineBottom(pageImage, Rect, top, ref bottom);
         progressBottom = bottom;
-        UpToLineTop(screenshot, Rect, top, ref bottom);
+        UpToLineTop(pageImage, Rect, top, ref bottom);
         progressTop = bottom;
-        UpToLineBottom(screenshot, Rect, top, ref bottom);
+        UpToLineBottom(pageImage, Rect, top, ref bottom);
     }
 
-    private static void DownToLineTop(PageImage screenshot, Rectangle rect, int max, ref int y)
+    private static void DownToLineTop(PageImage pageImage, Rectangle rect, int max, ref int y)
     {
-        while (y < max && screenshot.IsWhiteLine(rect, y))
+        while (y < max && pageImage.IsWhiteLine(rect, y))
             y++;
     }
 
-    private static void DownToLineBottom(PageImage screenshot, Rectangle rect, int max, ref int y)
+    private static void DownToLineBottom(PageImage pageImage, Rectangle rect, int max, ref int y)
     {
-        while (y < max && !screenshot.IsWhiteLine(rect, y))
+        while (y < max && !pageImage.IsWhiteLine(rect, y))
             y++;
     }
 
-    private static void UpToLineBottom(PageImage screenshot, Rectangle rect, int min, ref int y)
+    private static void UpToLineBottom(PageImage pageImage, Rectangle rect, int min, ref int y)
     {
-        while (y > min + 1 && screenshot.IsWhiteLine(rect, y - 1))
+        while (y > min + 1 && pageImage.IsWhiteLine(rect, y - 1))
             y--;
     }
 
-    private static void UpToLineTop(PageImage screenshot, Rectangle rect, int min, ref int y)
+    private static void UpToLineTop(PageImage pageImage, Rectangle rect, int min, ref int y)
     {
-        while (y > min + 1 && !screenshot.IsWhiteLine(rect, y - 1))
+        while (y > min + 1 && !pageImage.IsWhiteLine(rect, y - 1))
             y--;
     }
 
-    private static BigLetter GetExcludedLetter(PageImage screenshot, bool checkExcludedLetter)
+    private static BigLetter GetExcludedLetter(PageImage pageImage, bool checkExcludedLetter)
     {
         if (!checkExcludedLetter)
             return BigLetter.None;
         
-        PixelArray FullArray = screenshot.GetPixelArray(0, 0, screenshot.Width, screenshot.Height, 0, forbidGrayscale: false);
+        PixelArray FullArray = pageImage.GetPixelArray(0, 0, pageImage.Width, pageImage.Height, 0, forbidGrayscale: false);
 
         foreach (BigLetter BigLetter in BigLetterList)
         {
@@ -231,12 +231,12 @@ public class Page
             ColoredX--;
             ColoredY--;
 
-            for (int x = 0; x < screenshot.Width - LetterWidth; x++)
-                for (int y = 0; y < screenshot.Height - LetterHeight; y++)
+            for (int x = 0; x < pageImage.Width - LetterWidth; x++)
+                for (int y = 0; y < pageImage.Height - LetterHeight; y++)
                 {
                     if (FullArray.IsColored(x + ColoredX, y + ColoredY, out byte OtherColor) && Color == OtherColor)
                     {
-                        PixelArray Array = screenshot.GetGrayscalePixelArray(x, y, LetterWidth, LetterHeight, LetterHeight - 1);
+                        PixelArray Array = pageImage.GetGrayscalePixelArray(x, y, LetterWidth, LetterHeight, LetterHeight - 1);
                         if (PixelArray.IsPixelToPixelMatch(LetterArray, Array))
                         {
                             BigLetter Result = BigLetter;
@@ -251,7 +251,7 @@ public class Page
         return BigLetter.None;
     }
 
-    private static List<Rectangle> GetRectangleList(PageImage screenshot, Rectangle zoneOfInterest, Rectangle excludedRectangle)
+    private static List<Rectangle> GetRectangleList(PageImage pageImage, Rectangle zoneOfInterest, Rectangle excludedRectangle)
     {
         List<Rectangle> RectangleList = new();
 
@@ -260,7 +260,7 @@ public class Page
 
         while (Offset + Height < zoneOfInterest.Height)
         {
-            while (Offset + Height < zoneOfInterest.Height && !screenshot.IsWhiteLine(zoneOfInterest, excludedRectangle, Offset + Height))
+            while (Offset + Height < zoneOfInterest.Height && !pageImage.IsWhiteLine(zoneOfInterest, excludedRectangle, Offset + Height))
                 Height++;
 
             Rectangle Rect = new Rectangle(zoneOfInterest.Left, zoneOfInterest.Top + Offset, zoneOfInterest.Width, Height);
@@ -269,7 +269,7 @@ public class Page
             Offset += Height;
             Height = 0;
 
-            while (Offset + Height < zoneOfInterest.Height && screenshot.IsWhiteLine(zoneOfInterest, excludedRectangle, Offset + Height))
+            while (Offset + Height < zoneOfInterest.Height && pageImage.IsWhiteLine(zoneOfInterest, excludedRectangle, Offset + Height))
                 Height++;
 
             Offset += Height;
@@ -279,7 +279,7 @@ public class Page
         return RectangleList;
     }
 
-    private static List<ScanLine> GetScanLineList(PageImage screenshot, List<Rectangle> rectangleList, Rectangle excludedRectangle)
+    private static List<ScanLine> GetScanLineList(PageImage pageImage, List<Rectangle> rectangleList, Rectangle excludedRectangle)
     {
         List<ScanLine> ScanLineList = new();
 
@@ -288,8 +288,8 @@ public class Page
         foreach (Rectangle Rect in rectangleList)
             if (Rect.Height <= MaxLineHeight)
             {
-                Rectangle CleanRect = EliminateUnderline(screenshot, Rect);
-                int Baseline = FindBaseline(screenshot, CleanRect, excludedRectangle);
+                Rectangle CleanRect = EliminateUnderline(pageImage, Rect);
+                int Baseline = FindBaseline(pageImage, CleanRect, excludedRectangle);
 
                 ScanLineList.Add(new ScanLine() { LineNumber = LineNumber, Rect = CleanRect, Baseline = Baseline });
                 LineNumber++;
@@ -324,7 +324,7 @@ public class Page
                     int MinLeft = NextLine.Rect.Left < Line.Rect.Left ? NextLine.Rect.Left : Line.Rect.Left;
                     int MinRight = NextLine.Rect.Right > Line.Rect.Right ? NextLine.Rect.Right : Line.Rect.Right;
                     Rectangle Rect = new Rectangle(MinLeft, Line.Rect.Top, MinRight - MinLeft, NextLine.Rect.Bottom - Line.Rect.Top);
-                    int Baseline = FindBaseline(screenshot, Rect, excludedRectangle);
+                    int Baseline = FindBaseline(pageImage, Rect, excludedRectangle);
 
                     Line = new ScanLine() { LineNumber = NextLine.LineNumber, Rect = Rect, Baseline = Baseline };
 
@@ -337,7 +337,7 @@ public class Page
                     int MinLeft = PreviousLine.Rect.Left < Line.Rect.Left ? PreviousLine.Rect.Left : Line.Rect.Left;
                     int MinRight = PreviousLine.Rect.Right > Line.Rect.Right ? PreviousLine.Rect.Right : Line.Rect.Right;
                     Rectangle Rect = new Rectangle(MinLeft, PreviousLine.Rect.Top, MinRight - MinLeft, Line.Rect.Bottom - PreviousLine.Rect.Top);
-                    int Baseline = FindBaseline(screenshot, Rect, excludedRectangle);
+                    int Baseline = FindBaseline(pageImage, Rect, excludedRectangle);
 
                     Line = new ScanLine() { LineNumber = Line.LineNumber, Rect = Rect, Baseline = Baseline };
 
@@ -356,16 +356,16 @@ public class Page
         return l2.Rect.Height - l1.Rect.Height;
     }
 
-    private static Rectangle EliminateUnderline(PageImage screenshot, Rectangle rect)
+    private static Rectangle EliminateUnderline(PageImage pageImage, Rectangle rect)
     {
         for(;;)
         {
             int xLeft, xRight;
             for (xLeft = 0; xLeft < rect.Width; xLeft++)
-                if (!screenshot.IsWhitePixel(rect.Left + xLeft, rect.Bottom - 1))
+                if (!pageImage.IsWhitePixel(rect.Left + xLeft, rect.Bottom - 1))
                     break;
             for (xRight = rect.Width; xRight > 0; xRight--)
-                if (!screenshot.IsWhitePixel(rect.Left + xRight - 1, rect.Bottom - 1))
+                if (!pageImage.IsWhitePixel(rect.Left + xRight - 1, rect.Bottom - 1))
                     break;
 
             if (xRight < xLeft + 43)
@@ -373,7 +373,7 @@ public class Page
 
             bool IsUnderline = true;
             for (int x = xLeft; x < xRight; x++)
-                if (screenshot.IsWhitePixel(rect.Left + x, rect.Bottom - 1))
+                if (pageImage.IsWhitePixel(rect.Left + x, rect.Bottom - 1))
                 {
                     IsUnderline = false;
                     break;
@@ -390,7 +390,7 @@ public class Page
         return rect;
     }
 
-    private static int FindBaseline(PageImage screenshot, Rectangle rect, Rectangle excludedRectangle)
+    private static int FindBaseline(PageImage pageImage, Rectangle rect, Rectangle excludedRectangle)
     {
         int[] BlackCount = new int[rect.Height];
 
@@ -404,7 +404,7 @@ public class Page
 
                 if (!excludedRectangle.Contains(x, y))
                 {
-                    if (!screenshot.IsWhitePixel(x, y))
+                    if (!pageImage.IsWhitePixel(x, y))
                         BlackCount[i]++;
                 }
             }
@@ -425,13 +425,13 @@ public class Page
         return Baseline;
     }
 
-    private static List<ScanWord> ExtractWordsAndFigures(PageImage screenshot, Rectangle zoneOfInterest, List<ScanLine> scanLineList, Rectangle excludedRectangle)
+    private static List<ScanWord> ExtractWordsAndFigures(PageImage pageImage, Rectangle zoneOfInterest, List<ScanLine> scanLineList, Rectangle excludedRectangle)
     {
         List<ScanWord> ScanWordList = new();
 
         foreach (ScanLine Line in scanLineList)
         {
-            ExtractLineWordsAndFiguresNormal(screenshot, Line, excludedRectangle);
+            ExtractLineWordsAndFiguresNormal(pageImage, Line, excludedRectangle);
 
             ScanWordList.AddRange(Line.Words);
         }
@@ -439,13 +439,13 @@ public class Page
         return ScanWordList;
     }
 
-    private static void ExtractLineWordsAndFiguresNormal(PageImage screenshot, ScanLine line, Rectangle excludedRectangle)
+    private static void ExtractLineWordsAndFiguresNormal(PageImage pageImage, ScanLine line, Rectangle excludedRectangle)
     {
         Rectangle Rect = line.Rect;
         Rectangle BaselineRectangle = new Rectangle(Rect.Left, Rect.Top, Rect.Width, line.Baseline);
 
         int WordOffset = 0;
-        while (WordOffset < Rect.Width && screenshot.IsWhiteColumn(Rect, excludedRectangle, WordOffset))
+        while (WordOffset < Rect.Width && pageImage.IsWhiteColumn(Rect, excludedRectangle, WordOffset))
             WordOffset++;
 
         int LetterOffset = WordOffset;
@@ -454,15 +454,15 @@ public class Page
         while (LetterOffset < Rect.Width)
         {
             int LetterWidth = 0;
-            while (LetterOffset + LetterWidth < Rect.Width && !screenshot.IsWhiteColumn(Rect, excludedRectangle, LetterOffset + LetterWidth))
+            while (LetterOffset + LetterWidth < Rect.Width && !pageImage.IsWhiteColumn(Rect, excludedRectangle, LetterOffset + LetterWidth))
                 LetterWidth++;
 
             int BaselineWhitespaceWidth = 0;
-            while (LetterOffset + LetterWidth + BaselineWhitespaceWidth < Rect.Width && screenshot.IsWhiteColumn(BaselineRectangle, excludedRectangle, LetterOffset + LetterWidth + BaselineWhitespaceWidth))
+            while (LetterOffset + LetterWidth + BaselineWhitespaceWidth < Rect.Width && pageImage.IsWhiteColumn(BaselineRectangle, excludedRectangle, LetterOffset + LetterWidth + BaselineWhitespaceWidth))
                 BaselineWhitespaceWidth++;
 
             int WhitespaceWidth = 0;
-            while (LetterOffset + LetterWidth + WhitespaceWidth < Rect.Width && screenshot.IsWhiteColumn(Rect, excludedRectangle, LetterOffset + LetterWidth + WhitespaceWidth))
+            while (LetterOffset + LetterWidth + WhitespaceWidth < Rect.Width && pageImage.IsWhiteColumn(Rect, excludedRectangle, LetterOffset + LetterWidth + WhitespaceWidth))
                 WhitespaceWidth++;
 
             LetterOffsetList.Add(new LetterOffset() { Offset = LetterOffset - WordOffset, LetterWidth = LetterWidth, WhitespaceWidth = WhitespaceWidth });
@@ -482,7 +482,7 @@ public class Page
         }
     }
 
-    private static List<Rectangle> GetFigureList(PageImage screenshot, List<Rectangle> rectangleList)
+    private static List<Rectangle> GetFigureList(PageImage pageImage, List<Rectangle> rectangleList)
     {
         List<Rectangle> FigureList = new();
 
@@ -500,7 +500,7 @@ public class Page
         int Width = letterOffset.LetterWidth;
         int Height = word.Rect.Height;
 
-        return Screenshot.GetPixelArray(Left, Top, Width, Height, word.Baseline, forbidGrayscale);
+        return PageImage.GetPixelArray(Left, Top, Width, Height, word.Baseline, forbidGrayscale);
     }
 
     public PixelArray GetPixelArray(ScanWord word, int startOffset, bool forbidGrayscale)
@@ -510,7 +510,7 @@ public class Page
         int Width = word.Rect.Width - startOffset;
         int Height = word.Rect.Height;
 
-        return Screenshot.GetPixelArray(Left, Top, Width, Height, word.Baseline, forbidGrayscale);
+        return PageImage.GetPixelArray(Left, Top, Width, Height, word.Baseline, forbidGrayscale);
     }
 
     public PixelArray GetPixelArray(ScanWord word, int startOffset, int width, bool forbidGrayscale)
@@ -520,12 +520,12 @@ public class Page
         int Width = Math.Min(word.Rect.Width - startOffset, width);
         int Height = word.Rect.Height;
 
-        return Screenshot.GetPixelArray(Left, Top, Width, Height, word.Baseline, forbidGrayscale);
+        return PageImage.GetPixelArray(Left, Top, Width, Height, word.Baseline, forbidGrayscale);
     }
 
     public PixelArray GetPixelArray(ScanWord word, Rectangle rect, bool forbidGrayscale)
     {
-        return Screenshot.GetPixelArray(rect.Left, rect.Top, rect.Width, rect.Height, word.Baseline, forbidGrayscale);
+        return PageImage.GetPixelArray(rect.Left, rect.Top, rect.Width, rect.Height, word.Baseline, forbidGrayscale);
     }
 
     public void SetProgress(int sectionIndex, int progress, int total)

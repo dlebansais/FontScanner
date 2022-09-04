@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <Platforms>x64</Platforms>
     <NeutralLanguage>en-US</NeutralLanguage>
-    <RootNamespace>FontScanner</RootNamespace>
+    <RootNamespace>TestFontScanner</RootNamespace>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
@@ -19,6 +19,14 @@
   <ItemGroup>
     <ProjectReference Include="..\..\FontScanner\FontScanner.csproj" />
     <ProjectReference Include="..\..\Fonts\Fonts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+	<None Remove="TestResources/**/*.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="TestResources/**/*.png" />
   </ItemGroup>
 
 </Project>

@@ -3,7 +3,7 @@
 using System.Diagnostics;
 using System.Drawing;
 
-[DebuggerDisplay("{Text}")]
+[DebuggerDisplay("{LetterArray is null ? \"None\" : DisplayText,nq}")]
 public record BigLetter
 {
     public static BigLetter None = new();
@@ -23,4 +23,5 @@ public record BigLetter
     public char Text { get; }
     public PixelArray LetterArray { get; }
     public Rectangle Location { get; set; }
+    public string DisplayText { get { return LetterArray is null ? string.Empty : Text.ToString(); } }
 }

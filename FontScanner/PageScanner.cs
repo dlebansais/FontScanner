@@ -107,10 +107,10 @@ public partial class PageScanner
 
     private static bool CanMergeRect(Page page, Rectangle rect1, Rectangle rect2)
     {
-        using Bitmap Bitmap1 = page.Screenshot.ToBitmapSidesClipped(rect1, out int LeftMargin1, out int RightMargin1);
+        using Bitmap Bitmap1 = page.PageImage.ToBitmapSidesClipped(rect1, out int LeftMargin1, out int RightMargin1);
         bool IsLeftImage1 = LeftMargin1 >= RightMargin1 * 5;
         bool IsRightImage1 = RightMargin1 >= LeftMargin1 * 5;
-        using Bitmap Bitmap2 = page.Screenshot.ToBitmapSidesClipped(rect2, out int LeftMargin2, out int RightMargin2);
+        using Bitmap Bitmap2 = page.PageImage.ToBitmapSidesClipped(rect2, out int LeftMargin2, out int RightMargin2);
         bool IsLeftImage2 = LeftMargin2 >= RightMargin2 * 5;
         bool IsRightImage2 = RightMargin2 >= LeftMargin2 * 5;
 
@@ -181,7 +181,7 @@ public partial class PageScanner
         string ProgressString = string.Empty;
 
         int Left = 0;
-        while (Left < Rect.Width && page.Screenshot.IsWhiteColumn(Rect, Left))
+        while (Left < Rect.Width && page.PageImage.IsWhiteColumn(Rect, Left))
             Left++;
 
         int Right = Rect.Width;
@@ -189,13 +189,13 @@ public partial class PageScanner
 
         for (;;)
         {
-            while (Right > Left && page.Screenshot.IsWhiteColumn(Rect, Right - 1))
+            while (Right > Left && page.PageImage.IsWhiteColumn(Rect, Right - 1))
                 Right--;
 
             if (Right <= Left)
                 break;
 
-            PixelArray LineArray = page.Screenshot.GetPixelArray(Rect.Left + Left, Rect.Top, Right - Left, Rect.Height, Rect.Height - 1, forbidGrayscale: false);
+            PixelArray LineArray = page.PageImage.GetPixelArray(Rect.Left + Left, Rect.Top, Right - Left, Rect.Height, Rect.Height - 1, forbidGrayscale: false);
             //LineArray.DebugPrint();
 
             if (!ScanProgressDigit(font, LineArray, ref VerticalOffset, out char Digit))
