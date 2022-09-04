@@ -5,7 +5,9 @@ VisualStudioVersion = 17.3.32819.101
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FontScanner", "FontScanner\FontScanner.csproj", "{E7051FFA-1008-4637-BF03-388B83C5B539}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestFontScanner", "Test\TestFontScanner\TestFontScanner.csproj", "{0B55A72B-8B76-4602-B36D-E661D6ADA3F4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestFontScanner", "Test\TestFontScanner\TestFontScanner.csproj", "{0B55A72B-8B76-4602-B36D-E661D6ADA3F4}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Fonts", "Fonts\Fonts.csproj", "{C6C49FB6-3244-4CD2-A296-A8FE5F1686C8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -20,6 +22,10 @@ Global
 		{0B55A72B-8B76-4602-B36D-E661D6ADA3F4}.Debug|x64.ActiveCfg = Debug|x64
 		{0B55A72B-8B76-4602-B36D-E661D6ADA3F4}.Debug|x64.Build.0 = Debug|x64
 		{0B55A72B-8B76-4602-B36D-E661D6ADA3F4}.Release|x64.ActiveCfg = Release|x64
+		{C6C49FB6-3244-4CD2-A296-A8FE5F1686C8}.Debug|x64.ActiveCfg = Debug|x64
+		{C6C49FB6-3244-4CD2-A296-A8FE5F1686C8}.Debug|x64.Build.0 = Debug|x64
+		{C6C49FB6-3244-4CD2-A296-A8FE5F1686C8}.Release|x64.ActiveCfg = Release|x64
+		{C6C49FB6-3244-4CD2-A296-A8FE5F1686C8}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

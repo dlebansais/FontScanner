@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\FontScanner\FontScanner.csproj" />
+    <ProjectReference Include="..\..\Fonts\Fonts.csproj" />
   </ItemGroup>
 
 </Project>

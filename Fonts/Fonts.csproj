@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+	<TargetFramework>net48</TargetFramework>
+	<LangVersion>10.0</LangVersion>
+	<Nullable>enable</Nullable>
+	<Platforms>x64</Platforms>
+	<NeutralLanguage>en-US</NeutralLanguage>
+	<RootNamespace>FontScanner</RootNamespace>
+	<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+	<None Remove="FontResources/**/*.png" />
+	<None Remove="LetterResources/**/*.png" />
+	<None Remove="PageResources/**/*.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="FontResources/**/*.png" />
+    <EmbeddedResource Include="LetterResources/**/*.png" />
+    <EmbeddedResource Include="PageResources/**/*.png" />
+  </ItemGroup>
+
+</Project>
