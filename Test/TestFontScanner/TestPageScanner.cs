@@ -1,10 +1,12 @@
 ﻿namespace TestFontScanner;
 
+using FontLoader;
 using FontScanner;
 using NUnit.Framework;
-using System.Drawing;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using Bitmap = System.Drawing.Bitmap;
 
 [TestFixture]
 public class TestPageScanner
@@ -15,7 +17,7 @@ public class TestPageScanner
         TestFont = new("Test", typeof(Dummy).Assembly);
     }
 
-    static ScannerFont TestFont = null!;
+    static Font TestFont = null!;
     static int TestSideMargin = 0;
 
     private Page LoadPage(int pageIndex)

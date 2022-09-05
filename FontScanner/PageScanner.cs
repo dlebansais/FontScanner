@@ -1,16 +1,18 @@
 ﻿namespace FontScanner;
 
+using FontLoader;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
+using Rectangle = System.Drawing.Rectangle;
+using Bitmap = System.Drawing.Bitmap;
 
 public partial class PageScanner
 {
     private static List<int> DoubleVerticalOffsetList = new() { 0, 1, -1, +2, -2, -3, +3, -4, +4, -5, +5 };
     private static List<int> SingleVerticalOffsetList = new() { 0, 1, -1, -3, -2, -4 };
 
-    public static bool Scan(ScannerFont font, Page page)
+    public static bool Scan(Font font, Page page)
     {
         bool IsScanComplete = true;
         bool IsFirstFigure = false;
@@ -169,7 +171,7 @@ public partial class PageScanner
             isScanComplete = true;
     }
 
-    public static bool ScanProgress(ref int sectionIndex, ScannerFont font, Page page)
+    public static bool ScanProgress(ref int sectionIndex, Font font, Page page)
     {
         ScanLine ProgressLine = page.ProgressLine;
         Rectangle Rect = ProgressLine.Rect;
@@ -226,7 +228,7 @@ public partial class PageScanner
         return true;
     }
 
-    public static bool ScanProgressDigit(ScannerFont font, PixelArray lineArray, ref int? verticalOffset, out char digit)
+    public static bool ScanProgressDigit(Font font, PixelArray lineArray, ref int? verticalOffset, out char digit)
     {
         digit = '\0';
 
@@ -244,7 +246,7 @@ public partial class PageScanner
                     int HeightDifference = Math.Abs(Array.Height - lineArray.Height);
 
                     for (int i = -HeightDifference; i <= HeightDifference; i++)
-                        if (PixelArray.IsRightMatch(Array, lineArray, i))
+                        if (PixelArrayHelper.IsRightMatch(Array, lineArray, i))
                         {
                             IsMatch = true;
                             verticalOffset = i;
@@ -252,7 +254,7 @@ public partial class PageScanner
                         }
                 }
                 else
-                    IsMatch = PixelArray.IsRightMatch(Array, lineArray, (int)verticalOffset);
+                    IsMatch = PixelArrayHelper.IsRightMatch(Array, lineArray, (int)verticalOffset);
 
                 if (IsMatch)
                 {
@@ -265,7 +267,7 @@ public partial class PageScanner
         return false;
     }
 
-    private static bool Scan(Page page, ScanLine line, ScannerFont font)
+    private static bool Scan(Page page, ScanLine line, Font font)
     {
         bool IsScanComplete = true;
         int i;
@@ -344,7 +346,7 @@ public partial class PageScanner
         return IsScanComplete;
     }
 
-    private static bool Scan(Page page, ScanWord word, ScannerFont font, bool isLastWord, out bool isLineScanned)
+    private static bool Scan(Page page, ScanWord word, Font font, bool isLastWord, out bool isLineScanned)
     {
         isLineScanned = false;
 
@@ -392,7 +394,7 @@ public partial class PageScanner
                     if (word.Line.Words.IndexOf(word) == 0 && i == 0)
                     {
                         Dictionary<Letter, PixelArray> CharacterTable = font.CharacterTable;
-                        List<Letter> PreferredOrder = ScannerFont.GetPreferredOrder(CharacterTable);
+                        List<Letter> PreferredOrder = GetPreferredOrder(CharacterTable);
 
                         CheckFirstCharacterVerticalOffset(page, word, CharacterTable, PreferredOrder);
                     }
@@ -447,25 +449,25 @@ public partial class PageScanner
         return IsScanComplete;
     }
 
-    private static bool SingleCharacterScan(Page page, ScanWord word, LetterOffset letterOffset, ScannerFont font, bool isLastLetter)
+    private static bool SingleCharacterScan(Page page, ScanWord word, LetterOffset letterOffset, Font font, bool isLastLetter)
     {
         PixelArray LetterArray = page.GetPixelArray(word, letterOffset, forbidGrayscale: false);
         return SingleCharacterScan(word, LetterArray, font, isLastLetter);
     }
 
-    private static bool SingleCharacterScan(Page page, ScanWord word, LetterOffset letterOffset, LetterOffset nextLetterOffset, ScannerFont font)
+    private static bool SingleCharacterScan(Page page, ScanWord word, LetterOffset letterOffset, LetterOffset nextLetterOffset, Font font)
     {
         PixelArray LetterArray = page.GetPixelArray(word, letterOffset.Offset, letterOffset.LetterWidth + letterOffset.WhitespaceWidth + nextLetterOffset.LetterWidth, forbidGrayscale: false);
         return SingleCharacterScan(word, LetterArray, font, isLastLetter: false);
     }
 
-    private static bool SingleCharacterScan(Page page, ScanWord word, LetterOffset letterOffset, LetterOffset nextLetterOffset, LetterOffset nextNextLetterOffset, ScannerFont font)
+    private static bool SingleCharacterScan(Page page, ScanWord word, LetterOffset letterOffset, LetterOffset nextLetterOffset, LetterOffset nextNextLetterOffset, Font font)
     {
         PixelArray LetterArray = page.GetPixelArray(word, letterOffset.Offset, letterOffset.LetterWidth + letterOffset.WhitespaceWidth + nextLetterOffset.LetterWidth + nextLetterOffset.WhitespaceWidth + nextNextLetterOffset.LetterWidth, forbidGrayscale: false);
         return SingleCharacterScan(word, LetterArray, font, isLastLetter: false);
     }
 
-    private static bool SingleCharacterScan(ScanWord word, PixelArray letterArray, ScannerFont font, bool isLastLetter)
+    private static bool SingleCharacterScan(ScanWord word, PixelArray letterArray, Font font, bool isLastLetter)
     {
         letterArray = letterArray.Clipped();
         Debug.Assert(letterArray != PixelArray.Empty);
@@ -543,7 +545,7 @@ public partial class PageScanner
                 if (CellArray.Width > letterArray.Width)
                 {
                     int Cutoff = CellArray.Width - letterArray.Width;
-                    CellArray = PixelArray.Cut(CellArray, Cutoff);
+                    CellArray = PixelArrayHelper.Cut(CellArray, Cutoff);
                     CellArray = CellArray.Clipped();
                 }
             }
@@ -556,7 +558,7 @@ public partial class PageScanner
                     letterArray.DebugPrint();
             }
 
-            if (PixelArray.IsMatch(CellArray, letterArray, verticalOffset))
+            if (PixelArrayHelper.IsMatch(CellArray, letterArray, verticalOffset))
             {
                 if (verticalOffset != 0)
                 {
@@ -573,7 +575,7 @@ public partial class PageScanner
             if (Key.Text == "4" && verticalOffset == 0) // Special case when the baseline is confusing
             {
                 int Diff = CellArray.Height / 4; // 27 -> 21
-                if (PixelArray.IsMatch(CellArray, letterArray, verticalOffset: Diff))
+                if (PixelArrayHelper.IsMatch(CellArray, letterArray, verticalOffset: Diff))
                 {
                     //PixelArray.ProfileMatch(CellArray, letterArray);
                     matchingLetter = Key;
@@ -612,7 +614,7 @@ public partial class PageScanner
                 if (CellArray.Width > letterArray.Width)
                 {
                     int Cutoff = CellArray.Width - letterArray.Width;
-                    CellArray = PixelArray.Cut(CellArray, Cutoff);
+                    CellArray = PixelArrayHelper.Cut(CellArray, Cutoff);
                     CellArray = CellArray.Clipped();
                 }
             }
@@ -625,7 +627,7 @@ public partial class PageScanner
                     letterArray.DebugPrint();
             }
 
-            if (PixelArray.IsPixelToPixelMatch(CellArray, letterArray))
+            if (PixelArrayHelper.IsPixelToPixelMatch(CellArray, letterArray))
             {
                 if (Key.Text == "…" && !LetterType.IsBlue)
                 {
@@ -647,7 +649,7 @@ public partial class PageScanner
     private static int LastVerticalOffset = 0;
     private static LetterType LastLetterType = LetterType.Normal;
 
-    private static bool PartialScan(Page page, ScanWord word, int offsetIndex, ScannerFont font, bool isLastWord, bool isLastLetter, ref Letter lastLetter, ref int lastMergedWidth, out int lastRight)
+    private static bool PartialScan(Page page, ScanWord word, int offsetIndex, Font font, bool isLastWord, bool isLastLetter, ref Letter lastLetter, ref int lastMergedWidth, out int lastRight)
     {
         Letter PreviousLetter = lastLetter;
         int PreviousMergedWidth = lastMergedWidth;
@@ -666,7 +668,7 @@ public partial class PageScanner
         return false;
     }
 
-    private static bool WordEndScan(Page page, ScanWord word, LetterOffset letterOffset, bool isLastWord, ScannerFont font)
+    private static bool WordEndScan(Page page, ScanWord word, LetterOffset letterOffset, bool isLastWord, Font font)
     {
         int MaxCutoff = 1;
 
@@ -680,7 +682,7 @@ public partial class PageScanner
         return false;
     }
 
-    private static bool WordEndScan(Page page, ScanWord word, LetterOffset letterOffset, bool isLastWord, ScannerFont font, int endCutoff)
+    private static bool WordEndScan(Page page, ScanWord word, LetterOffset letterOffset, bool isLastWord, Font font, int endCutoff)
     {
         PixelArray LetterArray = page.GetPixelArray(word, letterOffset.Offset, forbidGrayscale: false);
         LetterArray = LetterArray.Clipped();
@@ -726,7 +728,7 @@ public partial class PageScanner
         return false;
     }
 
-    private static bool SingleCharLineEndScan(Page page, ScanWord word, LetterOffset letterOffset, ScannerFont font)
+    private static bool SingleCharLineEndScan(Page page, ScanWord word, LetterOffset letterOffset, Font font)
     {
         ScanLine Line = word.Line;
         ScanWord LastWord = Line.Words[Line.Words.Count - 1];
@@ -767,7 +769,7 @@ public partial class PageScanner
         return false;
     }
 
-    private static bool MergedWordScan(Page page, ScanWord word, LetterOffset letterOffset, ScannerFont font)
+    private static bool MergedWordScan(Page page, ScanWord word, LetterOffset letterOffset, Font font)
     {
         ScanLine Line = word.Line;
         int Index = Line.Words.IndexOf(word);
@@ -842,7 +844,7 @@ public partial class PageScanner
         return false;
     }
 
-    private static bool LineEndScan(Page page, ScanWord word, LetterOffset letterOffset, ScannerFont font)
+    private static bool LineEndScan(Page page, ScanWord word, LetterOffset letterOffset, Font font)
     {
         ScanLine Line = word.Line;
         ScanWord LastWord = Line.Words[Line.Words.Count - 1];
@@ -882,7 +884,7 @@ public partial class PageScanner
         return false;
     }
 
-    private static bool PartialScan(Page page, ScanWord word, int startOffset, int endOffset, int verticalOffset, Letter previousLetter, int previousMergedWidth, ScannerFont font, bool isLastWord, bool isLastLetter, int endCutoff, Letter preferredStartLetter, ref Letter lastLetter, ref int lastMergedWidth, out int lastRight)
+    private static bool PartialScan(Page page, ScanWord word, int startOffset, int endOffset, int verticalOffset, Letter previousLetter, int previousMergedWidth, Font font, bool isLastWord, bool isLastLetter, int endCutoff, Letter preferredStartLetter, ref Letter lastLetter, ref int lastMergedWidth, out int lastRight)
     {
         bool ForbidGrayscale = previousLetter.LetterType.IsBlue && preferredStartLetter != Letter.Unknown && !preferredStartLetter.LetterType.IsBlue;
 
@@ -921,10 +923,10 @@ public partial class PageScanner
         }
     }
 
-    private static bool TryPartialScan(PixelArray remainingWordArray, Letter previousLetter, int previousMergedWidth, int verticalOffset, ScannerFont font, bool isLastLetter, int endCutoff, Letter preferredStartLetter, out Letter matchingLetter, out int mergedWidth, out Letter preferredNextLetter)
+    private static bool TryPartialScan(PixelArray remainingWordArray, Letter previousLetter, int previousMergedWidth, int verticalOffset, Font font, bool isLastLetter, int endCutoff, Letter preferredStartLetter, out Letter matchingLetter, out int mergedWidth, out Letter preferredNextLetter)
     {
         Dictionary<Letter, PixelArray> CharacterTable = font.CharacterTable;
-        List<Letter> PreferredOrder = ScannerFont.GetPreferredOrder(CharacterTable);
+        List<Letter> PreferredOrder = GetPreferredOrder(CharacterTable);
 
         PixelArray PreviousArray = previousLetter.IsEmpty ? PixelArray.Empty : font.CharacterTable[previousLetter];
 
@@ -995,7 +997,7 @@ public partial class PageScanner
                 continue;
 
             PixelArray CellArray = characterTable[Key];
-            PixelArray MergedArray = PixelArray.Merge(previousArray, CellArray, previousArray.Width);
+            PixelArray MergedArray = PixelArrayHelper.Merge(previousArray, CellArray, previousArray.Width);
             int LocalCutoff = endCutoff;
 
             if (MergedArray.Width > remainingWordArray.Width)
@@ -1006,8 +1008,8 @@ public partial class PageScanner
                     LocalCutoff = MinCutoff;
             }
 
-            MergedArray = PixelArray.Cut(MergedArray, LocalCutoff);
-            MergedArray = PixelArray.Enlarge(MergedArray, remainingWordArray);
+            MergedArray = PixelArrayHelper.Cut(MergedArray, LocalCutoff);
+            MergedArray = PixelArrayHelper.Enlarge(MergedArray, remainingWordArray);
 
             if (Key.Text == "g" && !Key.LetterType.IsItalic && !Key.LetterType.IsBold && Key.LetterType.IsBlue && Key.LetterType.FontSize == 19.5)
             {
@@ -1017,7 +1019,7 @@ public partial class PageScanner
                     remainingWordArray.DebugPrint();
             }
 
-            if (PixelArray.IsLeftMatch(MergedArray, remainingWordArray, verticalOffset, out int FirstDiffX))
+            if (PixelArrayHelper.IsLeftMatch(MergedArray, remainingWordArray, verticalOffset, out int FirstDiffX))
             {
                 matchingLetter = Key;
 
@@ -1076,7 +1078,7 @@ public partial class PageScanner
             double PerfectMatchRatio = 0.0;
             int RightOverlapWidth = (int)(CellArray.Width * 0.2);
 
-            if (PixelArray.IsLeftDiagonalMatch(CellArray, PerfectMatchRatio, RightOverlapWidth, RemainingWordArray, verticalOffset))
+            if (PixelArrayHelper.IsLeftDiagonalMatch(CellArray, PerfectMatchRatio, RightOverlapWidth, RemainingWordArray, verticalOffset))
             {
                 LastVerticalOffset = verticalOffset;
                 return true;
@@ -1265,7 +1267,7 @@ public partial class PageScanner
                 continue;
 
             PixelArray CellArray = characterTable[Key];
-            PixelArray MergedArray = PixelArray.Merge(previousArray, CellArray, previousArray.Width);
+            PixelArray MergedArray = PixelArrayHelper.Merge(previousArray, CellArray, previousArray.Width);
 
             if (Key.Text == "g" && !Key.IsItalic && !Key.IsBold && LetterType.IsBlue && LetterType.FontSize == 19.5)
             {
@@ -1300,7 +1302,7 @@ public partial class PageScanner
             if (CompatibilityWidth > remainingWordArray.Width)
                 break;
 
-            if (PixelArray.IsCompatible(previousArray, remainingWordArray, CompatibilityWidth))
+            if (PixelArrayHelper.IsCompatible(previousArray, remainingWordArray, CompatibilityWidth))
                 break;
         }
 
@@ -1356,15 +1358,15 @@ public partial class PageScanner
             for (int Inside = 0; Inside < maxInside; Inside++)
             {
                 int MaxMergeWidth = previousArray.Width - Inside + CellMergeWidth;
-                PixelArray MergedArray = PixelArray.Merge(previousArray, CellArray, Inside, MaxMergeWidth);
+                PixelArray MergedArray = PixelArrayHelper.Merge(previousArray, CellArray, Inside, MaxMergeWidth);
 
                 if (isLastLetter && MergedArray.Width > remainingWordArray.Width)
                 {
                     int LocalCutoff = MergedArray.Width - remainingWordArray.Width;
                     if (LocalCutoff > 0)
                     {
-                        MergedArray = PixelArray.Cut(MergedArray, LocalCutoff);
-                        MergedArray = PixelArray.Enlarge(MergedArray, remainingWordArray);
+                        MergedArray = PixelArrayHelper.Cut(MergedArray, LocalCutoff);
+                        MergedArray = PixelArrayHelper.Enlarge(MergedArray, remainingWordArray);
                     }
                 }
 
@@ -1373,7 +1375,7 @@ public partial class PageScanner
                 if (DisplayDebug)
                     remainingWordArray.DebugPrint();
 
-                if (PixelArray.IsLeftDiagonalMatch(MergedArray, PerfectMatchRatio, RightOverlapWidth, remainingWordArray, verticalOffset))
+                if (PixelArrayHelper.IsLeftDiagonalMatch(MergedArray, PerfectMatchRatio, RightOverlapWidth, remainingWordArray, verticalOffset))
                 {
                     if (previousLetter.Text == "!" && Key.Text == "\"")
                     {
@@ -1392,6 +1394,78 @@ public partial class PageScanner
         preferredNextLetter = Letter.Unknown;
         mergedWidth = 0;
         return false;
+    }
+
+    public static List<Letter> GetPreferredOrder(Dictionary<Letter, PixelArray> table)
+    {
+        List<Letter> Result = new(table.Keys);
+        Result.Sort(SortByLikelyness);
+
+        return Result;
+    }
+
+    private static int SortByLikelyness(Letter l1, Letter l2)
+    {
+        long Flags1 = LetterFlags(l1);
+        long Flags2 = LetterFlags(l2);
+
+        if (Flags1 > Flags2)
+            return -1;
+        else if (Flags1 < Flags2)
+            return 1;
+
+        if (l1.Text.Length > l2.Text.Length)
+            return -1;
+        else if (l1.Text.Length < l2.Text.Length)
+            return 1;
+
+        if (l1.LetterType.FontSize > l2.LetterType.FontSize)
+            return -1;
+        else if (l1.LetterType.FontSize < l2.LetterType.FontSize)
+            return 1;
+
+        for (int i = 0; i < l1.Text.Length; i++)
+        {
+            char c1 = l1.Text[i];
+            char c2 = l2.Text[i];
+
+            int Order = (int)c1 - (int)c2;
+
+            if (Order != 0)
+                return Order;
+        }
+
+        return 0;
+    }
+
+    private static long LetterFlags(Letter l)
+    {
+        const long FlagItalic = 0x20;
+        const long FlagNotBold = 0x10;
+        const long FlagNotUpper = 0x08;
+        const long FlagLetter = 0x04;
+        const long FlagThreeDots = 0x02;
+        const long FlagNotUpperI = 0x01;
+
+        long Flags = 0;
+
+        if (l.IsItalic)
+            Flags |= FlagItalic;
+        if (!l.IsBold)
+            Flags |= FlagNotBold;
+
+        char c = l.Text[0];
+
+        if (!char.IsUpper(c))
+            Flags |= FlagNotUpper;
+        if (char.IsLetter(c))
+            Flags |= FlagLetter;
+        if (c == '…')
+            Flags |= FlagThreeDots;
+        if (c != 'I')
+            Flags |= FlagNotUpperI;
+
+        return Flags;
     }
 
     public static bool DisplayDebug = false;

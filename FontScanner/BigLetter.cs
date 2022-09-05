@@ -1,5 +1,6 @@
 ﻿namespace FontScanner;
 
+using FontLoader;
 using System.Diagnostics;
 using System.Drawing;
 

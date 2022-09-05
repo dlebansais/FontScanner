@@ -1,5 +1,6 @@
 ﻿namespace FontScanner;
 
+using FontLoader;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -12,18 +13,7 @@ public class Page
     public Page(PageImage pageImage, Assembly fontAssembly, string fontNamespace, int sideMargin, bool checkExcludedLetter)
     {
         PageImage = pageImage;
-
-        try
-        {
-            FillBigLetterList(fontAssembly, fontNamespace);
-        }
-        catch (Exception ex)
-        {
-            using FileStream Stream = new("test.txt", FileMode.Create, FileAccess.Write);
-            using StreamWriter Writer = new(Stream);
-            Writer.WriteLine(ex.Message);
-        }
-
+        FillBigLetterList(fontAssembly, fontNamespace);
         GetPageTopAndBottom(PageImage, out int TopY, out int BottomY);
         GetContentTopAndBottom(PageImage, ref TopY, ref BottomY, out int TitleTop, out int TitleBottom, out int ProgressTop, out int ProgressBottom);
         PageTop = TitleBottom;
@@ -248,7 +238,7 @@ public class Page
                     if (FullArray.IsColored(x + ColoredX, y + ColoredY, out byte OtherColor) && Color == OtherColor)
                     {
                         PixelArray Array = pageImage.GetGrayscalePixelArray(x, y, LetterWidth, LetterHeight, LetterHeight - 1);
-                        if (PixelArray.IsPixelToPixelMatch(LetterArray, Array))
+                        if (PixelArrayHelper.IsPixelToPixelMatch(LetterArray, Array))
                         {
                             BigLetter Result = BigLetter;
                             Result.Location = new Rectangle(x, y, LetterWidth, LetterHeight);
