@@ -1,47 +1,11 @@
-﻿namespace TestFontScanner;
-
-using FontLoader;
-using FontScanner;
-using NUnit.Framework;
+﻿using FontLoader;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Reflection;
-using Bitmap = System.Drawing.Bitmap;
 
-[TestFixture]
-public class TestPageScanner
+namespace FontScanner;
+
+public static class CellLoader
 {
-    [OneTimeSetUp]
-    public void InitTestSession()
-    {
-        Dictionary<Letter, FontBitmapCell> CellTable = FillCellTable();
-        TestFont = new("Test", typeof(Dummy).Assembly, CellTable);
-    }
-
-    private Font TestFont = null!;
-    private int TestSideMargin = 0;
-
-    private Page LoadPage(int pageIndex)
-    {
-        Assembly TestAssembly = typeof(TestPageScanner).Assembly;
-        using Stream PageBitmapStream = TestAssembly.GetManifestResourceStream($"{typeof(TestPageScanner).Namespace}.TestResources.Page{pageIndex}.png");
-        Bitmap Bitmap = new Bitmap(PageBitmapStream);
-        PageImage PageImage = new(Bitmap);
-        Page NewPage = new(PageImage, typeof(Dummy).Assembly, typeof(Dummy).Namespace, TestSideMargin, checkExcludedLetter: false);
-
-        return NewPage;
-    }
-
-    [Test]
-    public void BasicTest()
-    {
-        Page TestPage = LoadPage(0);
-        bool IsScanComplete = PageScanner.Scan(TestFont, TestPage);
-        Assert.IsTrue(IsScanComplete);
-    }
-
-    private Dictionary<Letter, FontBitmapCell> FillCellTable()
+    public static Dictionary<Letter, FontBitmapCell> FillCellTable()
     {
         Dictionary<Letter, FontBitmapCell> FontCellTable = new();
 
@@ -49,6 +13,7 @@ public class TestPageScanner
         FillTestTable(FontCellTable, '£', new FontBitmapCell() { Row = 4, Column = 17 });
         FillTestTable(FontCellTable, '□', new FontBitmapCell() { Row = 4, Column = 18 });
         FillTestTable(FontCellTable, '₂', new FontBitmapCell() { Row = 5, Column = 0 });
+        FillTestTable(FontCellTable, 'ń', new FontBitmapCell() { Row = 5, Column = 2 });
         FillTestTable(FontCellTable, '©', new FontBitmapCell() { Row = 5, Column = 3 });
         FillTestTable(FontCellTable, '«', new FontBitmapCell() { Row = 5, Column = 5 });
         FontCellTable.Add(Letter.Combo3, new FontBitmapCell() { Row = 5, Column = 6 });
@@ -68,6 +33,7 @@ public class TestPageScanner
         FillTestTable(FontCellTable, 'Ë', new FontBitmapCell() { Row = 6, Column = 17 });
         FillTestTable(FontCellTable, 'Ï', new FontBitmapCell() { Row = 7, Column = 1 });
         FillTestTable(FontCellTable, 'Ô', new FontBitmapCell() { Row = 7, Column = 6 });
+        FillTestTable(FontCellTable, '×', new FontBitmapCell() { Row = 7, Column = 9 });
         FillTestTable(FontCellTable, 'Ü', new FontBitmapCell() { Row = 7, Column = 14 });
         FillTestTable(FontCellTable, 'à', new FontBitmapCell() { Row = 7, Column = 18 });
         FillTestTable(FontCellTable, 'á', new FontBitmapCell() { Row = 7, Column = 19 });
@@ -114,7 +80,7 @@ public class TestPageScanner
         return FontCellTable;
     }
 
-    private void FillTestTable(Dictionary<Letter, FontBitmapCell> fontCellTable, char character, FontBitmapCell bitmapCell)
+    private static void FillTestTable(Dictionary<Letter, FontBitmapCell> fontCellTable, char character, FontBitmapCell bitmapCell)
     {
         fontCellTable.Add(new Letter(character, LetterType.Normal), bitmapCell);
         fontCellTable.Add(new Letter(character, LetterType.Italic), bitmapCell);

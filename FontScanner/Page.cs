@@ -64,7 +64,7 @@ public class Page
 
     public PageImage PageImage { get; }
     public Rectangle ZoneOfInterest { get; }
-    public BigLetter ExcludedLetter { get; private set; }
+    public BigLetter ExcludedLetter { get; set; }
     public ScanLine TitleLine { get; }
     public ScanLine ProgressLine { get; }
     public List<Rectangle> RectangleList { get; }
