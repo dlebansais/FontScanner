@@ -38,6 +38,7 @@ public static class CellLoader
         FillTestTable(FontCellTable, 'à', new FontBitmapCell() { Row = 7, Column = 18 });
         FillTestTable(FontCellTable, 'á', new FontBitmapCell() { Row = 7, Column = 19 });
         FillTestTable(FontCellTable, 'â', new FontBitmapCell() { Row = 8, Column = 0 });
+        FillTestTable(FontCellTable, 'ä', new FontBitmapCell() { Row = 8, Column = 2 });
         FillTestTable(FontCellTable, 'æ', new FontBitmapCell() { Row = 8, Column = 4 });
         FillTestTable(FontCellTable, 'ç', new FontBitmapCell() { Row = 8, Column = 5 });
         FillTestTable(FontCellTable, 'è', new FontBitmapCell() { Row = 8, Column = 6 });
