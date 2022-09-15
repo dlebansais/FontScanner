@@ -5,6 +5,91 @@ namespace FontScanner;
 
 public static class CellLoader
 {
+    public static readonly string AllCharacters =
+        "!\"#$%&'()*+,-./01234" +
+        "56789:;<=>?@ABCDEFGH" +
+        "IJKLMNOPQRSTUVWXYZ[\\" +
+        "]^_`abcdefghijklmnop" +
+        "qrstuvwxyz{|}~ ¡¢£¤¥" +
+        "¦§¨©ª«¬ ®¯°±²³´µ¶· ¹" +
+        "º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍ" +
+        "ÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàá" +
+        "âãäåæçèéêëìíîïðñòóôõ" +
+        "ö÷øùúûüýþÿĀāĂăĄąĆćĈĉ" +
+        "ĊċČčĎďĐđĒēĔĕĖėĘęĚěĜĝ" +
+        "‒œ—…“”ŵ‘ᾱῑῡʿḥṣ’•";
+
+    public static readonly string[] AllSupercripts =
+    {
+        "th", "st", "nd", "®",
+    };
+
+    public const int CharacterSequenceMaxLength = 8;
+
+    public static Dictionary<Letter, FontBitmapCell> FillCellTable()
+    {
+        Dictionary<Letter, FontBitmapCell> FontCellTable = new();
+
+        int Row = 0;
+        int Column = 0;
+
+        foreach (char Character in AllCharacters)
+        {
+            if (Character != ' ' && Character != ' ')
+            {
+                FontBitmapCell BitmapCell = new() { Row = Row, Column = Column };
+                FontCellTable.Add(new Letter(Character, LetterType.Normal), BitmapCell);
+                FontCellTable.Add(new Letter(Character, LetterType.Italic), BitmapCell);
+                FontCellTable.Add(new Letter(Character, LetterType.Bold), BitmapCell);
+                FontCellTable.Add(new Letter(Character, LetterType.ItalicBold), BitmapCell);
+            }
+
+            Column++;
+            if (Column >= 20)
+            {
+                Column = 0;
+                Row++;
+            }
+        }
+
+        foreach (string Supercript in AllSupercripts)
+        {
+            FontBitmapCell BitmapCell = new() { Row = Row, Column = Column };
+            string Text = $" {Supercript}";
+            FontCellTable.Add(new Letter(Text, LetterType.Normal), BitmapCell);
+            FontCellTable.Add(new Letter(Text, LetterType.Italic), BitmapCell);
+            FontCellTable.Add(new Letter(Text, LetterType.Bold), BitmapCell);
+            FontCellTable.Add(new Letter(Text, LetterType.ItalicBold), BitmapCell);
+
+            Column++;
+            if (Column >= 20)
+            {
+                Column = 0;
+                Row++;
+            }
+        }
+
+        foreach (string Supercript in AllSupercripts)
+        {
+            FontBitmapCell BitmapCell = new() { Row = Row, Column = Column };
+            string Text = $"-{Supercript}";
+            FontCellTable.Add(new Letter(Text, LetterType.Normal), BitmapCell);
+            FontCellTable.Add(new Letter(Text, LetterType.Italic), BitmapCell);
+            FontCellTable.Add(new Letter(Text, LetterType.Bold), BitmapCell);
+            FontCellTable.Add(new Letter(Text, LetterType.ItalicBold), BitmapCell);
+
+            Column++;
+            if (Column >= 20)
+            {
+                Column = 0;
+                Row++;
+            }
+        }
+
+        return FontCellTable;
+    }
+
+/*
     public static Dictionary<Letter, FontBitmapCell> FillCellTable()
     {
         Dictionary<Letter, FontBitmapCell> FontCellTable = new();
@@ -88,4 +173,5 @@ public static class CellLoader
         fontCellTable.Add(new Letter(character, LetterType.Bold), bitmapCell);
         fontCellTable.Add(new Letter(character, LetterType.ItalicBold), bitmapCell);
     }
+*/
 }

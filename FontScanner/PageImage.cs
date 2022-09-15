@@ -292,12 +292,44 @@ public class PageImage
         return true;
     }
 
+    public static double ItalicInclination = 0.28;
+
+    public bool IsWhiteColumnItalic(Rectangle clipping, int x)
+    {
+        for (int y = 0; y < clipping.Height; y++)
+        {
+            int InclinedX = x + (int)((clipping.Height - y - 1) * ItalicInclination);
+
+            if (!IsWhitePixel(clipping.Left + InclinedX, clipping.Top + y))
+                return false;
+        }
+
+        return true;
+    }
+
     public PixelArray GetPixelArray(int left, int top, int width, int height, int baseline, bool forbidGrayscale)
     {
         if (IsDominantBlue(left, top, width, height) || forbidGrayscale)
             return new PixelArray(left, width, top, height, ArgbValues, Stride, baseline, clearEdges: false);
         else
             return new PixelArray(left, width, top, height, GrayValues, Stride, baseline, clearEdges: false);
+    }
+
+    public byte[] GetArgbValues(int left, int top, int width, int height)
+    {
+        byte[] Result = new byte[width * height * 4];
+        int ResultOffset = 0;
+
+        for (int y = 0; y < height; y++)
+            for (int x = 0; x < width; x++)
+            {
+                int Offset = ((y + top) * Stride) + (x + left) * 4;
+
+                for (int k = 0; k < 4; k++)
+                    Result[ResultOffset++] = ArgbValues[Offset++];
+            }
+
+        return Result;
     }
 
     public PixelArray GetGrayscalePixelArray(int left, int top, int width, int height, int baseline)

@@ -369,7 +369,7 @@ public class Page
                 if (!pageImage.IsWhitePixel(rect.Left + xRight - 1, rect.Bottom - 1))
                     break;
 
-            if (xRight < xLeft + 43)
+            if (xRight < xLeft + 48) // '2' size 58
                 break;
 
             bool IsUnderline = true;
