@@ -24,7 +24,10 @@ public static class CellLoader
         "th", "st", "nd", "®",
     };
 
-    public const int CharacterSequenceMaxLength = 8;
+    public static readonly string FirstLetters =
+        "jy";
+
+    public const int CharacterSequenceMaxLength = 5;
 
     public static Dictionary<Letter, FontBitmapCell> FillCellTable()
     {
@@ -42,6 +45,15 @@ public static class CellLoader
                 FontCellTable.Add(new Letter(Character, LetterType.Italic), BitmapCell);
                 FontCellTable.Add(new Letter(Character, LetterType.Bold), BitmapCell);
                 FontCellTable.Add(new Letter(Character, LetterType.ItalicBold), BitmapCell);
+
+                if (FirstLetters.Contains($"{Character}"))
+                {
+                    string Text = $"*{Character}";
+                    FontCellTable.Add(new Letter(Text, LetterType.Normal), BitmapCell);
+                    FontCellTable.Add(new Letter(Text, LetterType.Italic), BitmapCell);
+                    FontCellTable.Add(new Letter(Text, LetterType.Bold), BitmapCell);
+                    FontCellTable.Add(new Letter(Text, LetterType.ItalicBold), BitmapCell);
+                }
             }
 
             Column++;

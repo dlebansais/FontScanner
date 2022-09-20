@@ -310,15 +310,17 @@ public class PageImage
     public PixelArray GetPixelArray(int left, int top, int width, int height, int baseline, bool forbidGrayscale)
     {
         if (IsDominantBlue(left, top, width, height) || forbidGrayscale)
-            return new PixelArray(left, width, top, height, ArgbValues, Stride, baseline, clearEdges: false);
+            return new PixelArray(ArgbValues, Stride, left, width, top, height, baseline, clearEdges: false);
         else
-            return new PixelArray(left, width, top, height, GrayValues, Stride, baseline, clearEdges: false);
+            return new PixelArray(GrayValues, Stride, left, width, top, height, baseline, clearEdges: false);
     }
 
-    public byte[] GetArgbValues(int left, int top, int width, int height)
+    public byte[] GetArgbValues(int left, int top, int width, int height, out double borderStrength)
     {
         byte[] Result = new byte[width * height * 4];
         int ResultOffset = 0;
+        int LineTotal = 0;
+        int StrengthCount = 0;
 
         for (int y = 0; y < height; y++)
             for (int x = 0; x < width; x++)
@@ -326,15 +328,29 @@ public class PageImage
                 int Offset = ((y + top) * Stride) + (x + left) * 4;
 
                 for (int k = 0; k < 4; k++)
-                    Result[ResultOffset++] = ArgbValues[Offset++];
+                {
+                    byte Pixel = ArgbValues[Offset];
+                    Result[ResultOffset] = Pixel;
+
+                    if (k < 3 && (y == 0 || y + 1 == height) && Pixel != 0xFF)
+                    {
+                        int PixelStrength = 0xFF - Pixel;
+                        LineTotal += PixelStrength;
+                        StrengthCount++;
+                    }
+
+                    ResultOffset++;
+                    Offset++;
+                }
             }
 
+        borderStrength = (StrengthCount >  0) ? ((double)LineTotal / StrengthCount) : 0;
         return Result;
     }
 
     public PixelArray GetGrayscalePixelArray(int left, int top, int width, int height, int baseline)
     {
-        return new PixelArray(left, width, top, height, GrayValues, Stride, baseline, clearEdges: false);
+        return new PixelArray(GrayValues, Stride, left, width, top, height, baseline, clearEdges: false);
     }
 
     public void ColorRect(Rectangle rect)
