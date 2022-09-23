@@ -1,5 +1,6 @@
 ﻿namespace FontScanner;
 
+using FontLoader;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -11,6 +12,7 @@ public class ScanLine
     public Rectangle Rect { get; set; }
     public int Baseline { get; set; }
     public List<ScanWord> Words { get; } = new();
+    public List<Letter> LetterList { get; } = new();
 
     public int EffectiveRight { get { return Words.Count > 0 ? Words[Words.Count - 1].EffectiveRect.Right : 0; } }
 }
