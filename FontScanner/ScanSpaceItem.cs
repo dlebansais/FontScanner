@@ -22,6 +22,9 @@ public class ScanSpaceItem
 
     public ScanSpaceItem(Font font, TypeFlags typeFlags, bool isSingle, List<char> characterList, CharacterPreferenceNew characterPreference)
     {
+        foreach (char c in characterList)
+            Debug.Assert(!LetterHelper.IsWhitespace(c));
+
         Font = font;
         TypeFlags = typeFlags;
         IsSingle = isSingle;
@@ -48,6 +51,9 @@ public class ScanSpaceItem
 
     public ScanSpaceItem(Font font, TypeFlags typeFlags, bool isSingle, List<char> characterList, CharacterPreferenceNew characterPreference, List<double> fontSizeList, FontPreference fontPreference)
     {
+        foreach (char c in characterList)
+            Debug.Assert(!LetterHelper.IsWhitespace(c));
+
         Font = font;
         TypeFlags = typeFlags;
         IsSingle = isSingle;

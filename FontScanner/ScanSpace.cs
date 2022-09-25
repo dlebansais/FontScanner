@@ -32,7 +32,12 @@ public class ScanSpace
 
         string DebugText = itemList[0].DebugText;
 
-        int CharacterCount = CellLoader.AllCharacters.Count + CellLoader.AllSuperscripts.Count;
+        List<char> NonWhitespaceCharacterList = new();
+        foreach (char c in CellLoader.AllCharacters)
+            if (!LetterHelper.IsWhitespace(c))
+                NonWhitespaceCharacterList.Add(c);
+
+        int CharacterCount = NonWhitespaceCharacterList.Count + CellLoader.AllSuperscripts.Count;
 
         int TypeFlagBits = typeof(TypeFlags).GetEnumValues().Length - 1;
         int TypeFlagCount = (1 << TypeFlagBits) - 1;
@@ -66,10 +71,10 @@ public class ScanSpace
                             double FontSize = FontSizeList[l];
 
                             bool IsWithinSpace;
-                            if (i < CellLoader.AllCharacters.Count)
-                                IsWithinSpace = Item.IsWithinSpace(CellLoader.AllCharacters[i], TypeFlags, IsSingle, FontSize);
+                            if (i < NonWhitespaceCharacterList.Count)
+                                IsWithinSpace = Item.IsWithinSpace(NonWhitespaceCharacterList[i], TypeFlags, IsSingle, FontSize);
                             else
-                                IsWithinSpace = Item.IsWithinSpace(CellLoader.AllSuperscripts[i - CellLoader.AllCharacters.Count], TypeFlags, IsSingle, FontSize);
+                                IsWithinSpace = Item.IsWithinSpace(CellLoader.AllSuperscripts[i - NonWhitespaceCharacterList.Count], TypeFlags, IsSingle, FontSize);
 
                             if (IsWithinSpace)
                             {

@@ -206,7 +206,7 @@ public static class ScanSpaceHelper
     {
         List<char> CharacterList = new();
         foreach (char c in CellLoader.AllCharacters)
-            if (!search.PreferredLetters.Contains(c))
+            if (!search.PreferredLetters.Contains(c) && !LetterHelper.IsWhitespace(c))
                 CharacterList.Add(c);
         CharacterPreferenceNew CharacterPreference = CharacterPreferenceNew.AllOthers;
 
@@ -221,6 +221,11 @@ public static class ScanSpaceHelper
 
     private static void AddUncommonFonts(List<ScanSpaceItem> itemList, Font font, ScanSpaceSearch search, TypeFlags typeFlags, bool isSingle)
     {
+        List<char> NonWhitespaceCharacterList = new();
+        foreach (char c in CellLoader.AllCharacters)
+            if (!LetterHelper.IsWhitespace(c))
+                NonWhitespaceCharacterList.Add(c);
+
         List<double> FontSizeList = new(font.FontSizeList);
         foreach (double FontSize in search.PreferredLetterFontSizeList)
             FontSizeList.Remove(FontSize);
@@ -228,7 +233,7 @@ public static class ScanSpaceHelper
             FontSizeList.Remove(FontSize);
 
         ScanSpaceItem NewItem = new(font, typeFlags, isSingle);
-        NewItem.AddCharacters(CellLoader.AllCharacters);
+        NewItem.AddCharacters(NonWhitespaceCharacterList);
         NewItem.AddSuperscripts(CellLoader.AllSuperscripts);
         NewItem.AddFontSizes(FontSizeList);
 
@@ -237,8 +242,13 @@ public static class ScanSpaceHelper
 
     private static void AddEverythingElse(List<ScanSpaceItem> itemList, Font font, TypeFlags typeFlags, bool isSingle)
     {
+        List<char> NonWhitespaceCharacterList = new();
+        foreach (char c in CellLoader.AllCharacters)
+            if (!LetterHelper.IsWhitespace(c))
+                NonWhitespaceCharacterList.Add(c);
+
         ScanSpaceItem NewItem = new(font, typeFlags, isSingle);
-        NewItem.AddCharacters(CellLoader.AllCharacters);
+        NewItem.AddCharacters(NonWhitespaceCharacterList);
         NewItem.AddSuperscripts(CellLoader.AllSuperscripts);
         NewItem.AddFontSizes(font.FontSizeList);
 

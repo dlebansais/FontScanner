@@ -2,6 +2,7 @@
 
 using FontLoader;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 public class ScanSpaceMatrix
 {
@@ -10,67 +11,127 @@ public class ScanSpaceMatrix
         PrimaryScanSpace = primaryScanSpace;
         SecondaryScanSpace = secondaryScanSpace;
         MainIterator = new ScanSpaceIterator(PrimaryScanSpace);
+        SecondaryIteratorTable = new Dictionary<Letter, ScanSpaceIterator>();
+
         Reset();
-        SecondaryScanSpace = secondaryScanSpace;
     }
 
     public ScanSpace PrimaryScanSpace { get; }
     public ScanSpace SecondaryScanSpace { get; }
     public ScanSpaceIterator MainIterator { get; }
-    public bool IsSingle { get { return MainIterator.IsSingle; } }
+
+    [DebuggerHidden]
+    public ScanSpaceItem MainItem { get { return MainIterator.CurrentItem; } }
+
+    [DebuggerHidden]
+    public bool IsSingle { get { return MainIterator.CurrentItem.IsSingle; } }
+
+    [DebuggerHidden]
     public Letter MainLetter { get { return MainIterator.CurrentLetter; } }
-    public Letter SecondaryLetter { get { return SecondaryIteratorTable.Count > 0 ? GetSecondary(MainIterator.CurrentLetter).CurrentLetter : Letter.EmptyNormal; } }
+
+    [DebuggerHidden]
+    public ScanSpaceItem SecondaryItem { get { Debug.Assert(HasSecondary()); return GetSecondary().CurrentItem; } }
+
+    [DebuggerHidden]
+    public Letter SecondaryLetter { get { Debug.Assert(HasSecondary()); return GetSecondary().CurrentLetter; } }
 
     public void Reset()
     {
         SecondaryIteratorTable.Clear();
         ReachedMainIndex = 0;
+        ItemToResetAtWhenCompatible = null;
     }
 
     public bool MainMoveNext()
     {
-        bool IsSecondaryIteratorCreated = SecondaryIteratorTable.ContainsKey(MainIterator.CurrentLetter);
-
-        bool IsMoved;
-        if (IsSecondaryIteratorCreated)
+        if (MainIterator.IsAtLastCharacterOfCurrentItem && ItemToResetAtWhenCompatible is not null)
         {
-            if (ReachedMainIndex < MainIterator.ItemIndex)
+            if (MainIterator.IsItemCompatibleWith(ItemToResetAtWhenCompatible))
             {
-                ReachedMainIndex = MainIterator.ItemIndex;
+                ItemToResetAtWhenCompatible = null;
                 MainIterator.Reset();
+                return MainIterator.MoveNext();
+            }
+        }
+
+        do
+        {
+            bool IsMoved;
+            if (MainIterator.ItemIndex < 0)
+                IsMoved = MainIterator.MoveNext();
+            else if (MainIterator.ItemIndex < ReachedMainIndex)
+                IsMoved = MainIterator.MoveNext(IteratorMoveOption.PartialOnly);
+            else
+                IsMoved = MainIterator.MoveNext();
+
+            if (!IsMoved)
+                return false;
+        }
+        while ((MainItem.IsSingle && MainIterator.ItemIndex < ReachedMainIndex) || (!MainItem.IsSingle && HasSecondary() && GetSecondary().IsCompleted));
+
+        if (MainItem.IsSingle && ReachedMainIndex < MainIterator.ItemIndex)
+            ReachedMainIndex = MainIterator.ItemIndex;
+
+        if (MainIterator.IsAtLastCharacterOfLastItem)
+        {
+            bool AllSecondaryIteratorsCompleted = true;
+            foreach (KeyValuePair<Letter, ScanSpaceIterator> Entry in SecondaryIteratorTable)
+            {
+                ScanSpaceIterator SecondaryIterator = Entry.Value;
+                if (!SecondaryIterator.IsAtLastCharacterOfLastItem)
+                {
+                    AllSecondaryIteratorsCompleted = false;
+                    break;
+                }
             }
 
-            IsMoved = MainIterator.MoveNextNoWhitespacePartialOnly();
+            if (!AllSecondaryIteratorsCompleted)
+                ItemToResetAtWhenCompatible = MainIterator.ItemList[MainIterator.ItemList.Count - 1];
         }
-        else
-            IsMoved = MainIterator.MoveNextNoWhitespace();
 
-        return IsMoved;
+        return true;
     }
 
     public bool SecondaryMoveNext()
     {
-        ScanSpaceIterator SecondaryIterator = GetSecondary(MainIterator.CurrentLetter);
+        Debug.Assert(MainIterator.IsEnumerationValid);
+        Debug.Assert(!MainItem.IsSingle);
 
-        if (!SecondaryIterator.IsCompatibleWith(MainIterator))
-            return false;
+        ScanSpaceIterator SecondaryIterator = GetSecondary();
 
-        bool IsMoved = SecondaryIterator.MoveNextNoWhitespaceSingleOnly();
-
-        return IsMoved;
-    }
-
-    private ScanSpaceIterator GetSecondary(Letter letter)
-    {
-        if (!SecondaryIteratorTable.ContainsKey(letter))
+        if (SecondaryIterator.IsNotCompatibleWithPrimary(MainIterator, out ScanSpaceItem IncompatibleItem))
         {
-            ScanSpaceIterator SecondaryIterator = new ScanSpaceIterator(SecondaryScanSpace);
-            SecondaryIteratorTable.Add(letter, SecondaryIterator);
+            ItemToResetAtWhenCompatible = IncompatibleItem;
+            return false;
         }
 
-        return SecondaryIteratorTable[letter];
+        if (!SecondaryIterator.MoveNext())
+            return false;
+
+        Debug.Assert(SecondaryItem.IsSingle);
+
+        return true;
     }
 
-    private Dictionary<Letter, ScanSpaceIterator> SecondaryIteratorTable { get; } = new();
+    private bool HasSecondary()
+    {
+        return SecondaryIteratorTable.ContainsKey(MainIterator.CurrentLetter);
+    }
+
+    private ScanSpaceIterator GetSecondary()
+    {
+        Letter MainLetter = MainIterator.CurrentLetter;
+
+        if (!SecondaryIteratorTable.ContainsKey(MainLetter))
+        {
+            ScanSpaceIterator SecondaryIterator = new ScanSpaceIterator(SecondaryScanSpace);
+            SecondaryIteratorTable.Add(MainLetter, SecondaryIterator);
+        }
+
+        return SecondaryIteratorTable[MainLetter];
+    }
+
+    private Dictionary<Letter, ScanSpaceIterator> SecondaryIteratorTable { get; }
     private int ReachedMainIndex;
+    private ScanSpaceItem? ItemToResetAtWhenCompatible;
 }
