@@ -21,6 +21,9 @@ public static class CellLoader
         '‒', 'œ', '—', '…', '“', '”', 'ŵ', '‘', 'ᾱ', 'ῑ', 'ῡ', 'ʿ', 'ḥ', 'ṣ', '’', '•',
     };
 
+    // TODO: 
+
+
     public static readonly List<string> AllSuperscripts = new()
     {
         "th", "st", "nd", "+®",

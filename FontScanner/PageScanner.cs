@@ -225,7 +225,7 @@ public static partial class PageScanner
 
         bool IsSuperscript = MainLetter.Text == "th";
 
-        if (MainLetter.Text == "th" && !MainLetter.IsItalic && !MainLetter.IsBold && !LetterType.IsBlue && LetterType.FontSize == 154)
+        if (MainLetter.Text == "*" && !MainLetter.IsItalic && !MainLetter.IsBold && !LetterType.IsBlue && LetterType.FontSize == 109)
         {
             if (DisplayDebug)
                 DebugPrintArray(MergedArray);
@@ -239,8 +239,14 @@ public static partial class PageScanner
         if (skimmer.IsFirstLetter)
         {
             List<int> VerticalOffsetList = new() { 0, -1, +1, -2, +2, -3, +3 };
+
             VerticalOffsetList.Remove(lastVerticalOffset);
             VerticalOffsetList.Insert(0, lastVerticalOffset);
+
+            int ZeroBaseline = MergedArray.Baseline - MergedArray.Height + 1;
+            VerticalOffsetList.Remove(ZeroBaseline);
+            VerticalOffsetList.Insert(1, ZeroBaseline);
+
             IsMatch = false;
 
             foreach (int VerticalOffset in VerticalOffsetList)
