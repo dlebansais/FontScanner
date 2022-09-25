@@ -9,16 +9,21 @@ public class ScanSpaceIterator
     public ScanSpaceIterator(ScanSpace scanSpace)
     {
         ScanSpace = scanSpace;
+        ItemList = ScanSpace.ItemList;
         CurrentLetter = Letter.EmptyNormal;
-        ItemCount = ScanSpace.ItemList.Count;
+        ItemCount = ItemList.Count;
         Reset();
     }
 
     public ScanSpace ScanSpace { get; }
+    public List<ScanSpaceItem> ItemList { get; }
     public Letter CurrentLetter { get; private set; }
     public bool IsSingle { get; private set; }
     public int ItemIndex { get; private set; }
     public int ItemCount { get; }
+    public CharacterPreferenceNew HighestCharacterPreferenceReached { get; set; }
+    public List<TypeFlags> HighestTypeFlagsMixReached { get; } = new();
+    public FontPreference HighestFontPreferenceReached { get; set; }
 
     public void Reset()
     {
@@ -73,7 +78,6 @@ public class ScanSpaceIterator
         if (ItemIndex >= ItemCount)
             return false;
 
-        List<ScanSpaceItem> ItemList = ScanSpace.ItemList;
         ScanSpaceItem Item = ItemList[ItemIndex];
         Debug.Assert(CharacterIndex < Item.CharacterList.Count + Item.SuperscriptList.Count);
         Debug.Assert(FontSizeIndex < Item.FontSizeList.Count);
@@ -94,13 +98,22 @@ public class ScanSpaceIterator
 
         IsSingle = Item.IsSingle;
 
+        if (HighestCharacterPreferenceReached < Item.CharacterPreference)
+            HighestCharacterPreferenceReached = Item.CharacterPreference;
+
+        if (HighestFontPreferenceReached < Item.FontPreference)
+            HighestFontPreferenceReached = Item.FontPreference;
+
+        if (!HighestTypeFlagsMixReached.Contains(TypeFlags))
+            HighestTypeFlagsMixReached.Add(TypeFlags);
+
         Increment(option);
         return true;
     }
 
     private void Increment(IteratorMoveOption option)
     {
-        ScanSpaceItem Item = ScanSpace.ItemList[ItemIndex];
+        ScanSpaceItem Item = ItemList[ItemIndex];
 
         if ((Item.IsSingle && option == IteratorMoveOption.PartialOnly) || (!Item.IsSingle && option == IteratorMoveOption.SingleOnly))
         {
@@ -123,6 +136,22 @@ public class ScanSpaceIterator
                 }
             }
         }
+    }
+
+    public bool IsCompatibleWith(ScanSpaceIterator mainIterator)
+    {
+        ScanSpaceItem SecondaryIteratorItem = ItemList[ItemIndex];
+
+        if (SecondaryIteratorItem.CharacterPreference > mainIterator.HighestCharacterPreferenceReached)
+            return false;
+
+        if (SecondaryIteratorItem.FontPreference > mainIterator.HighestFontPreferenceReached)
+            return false;
+
+        if (!mainIterator.HighestTypeFlagsMixReached.Contains(SecondaryIteratorItem.TypeFlags))
+            return false;
+
+        return true;
     }
 
     private int CharacterIndex;

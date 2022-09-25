@@ -311,6 +311,8 @@ public class PageImage
     {
         if (IsDominantBlue(left, top, width, height) || forbidGrayscale)
             return new PixelArray(ArgbValues, Stride, left, width, top, height, baseline, clearEdges: false);
+        else if (IsDominantRed(left, top, width, height) || forbidGrayscale)
+            return new PixelArray(ArgbValues, Stride, left, width, top, height, baseline, clearEdges: false);
         else
             return new PixelArray(GrayValues, Stride, left, width, top, height, baseline, clearEdges: false);
     }
@@ -385,6 +387,31 @@ public class PageImage
             }
 
         return BlueCount >= (ColoredCount * 2) / 3;
+    }
+
+    private bool IsDominantRed(int left, int top, int width, int height)
+    {
+        int RedCount = 0;
+        int ColoredCount = 0;
+
+        for (int i = left; i < left + width; i++)
+            for (int j = top; j < top + height; j++)
+            {
+                int Offset = (j * Stride) + (i * 4);
+                byte R = ArgbValues[Offset + 2];
+                byte G = ArgbValues[Offset + 1];
+                byte B = ArgbValues[Offset + 0];
+
+                if (R != 0xFF || G != 0xFF || B != 0xFF)
+                {
+                    ColoredCount++;
+
+                    if (R > B && R > G)
+                        RedCount++;
+                }
+            }
+
+        return RedCount >= (ColoredCount * 2) / 3;
     }
 
     private void ColorPixel(int x, int y)

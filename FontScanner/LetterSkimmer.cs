@@ -1,7 +1,9 @@
 ﻿namespace FontScanner;
 
 using System;
+using System.Diagnostics;
 
+[DebuggerDisplay("{DisplayText,nq}")]
 public class LetterSkimmer
 {
     public LetterSkimmer(ScanLine line)
@@ -11,6 +13,7 @@ public class LetterSkimmer
         LetterIndex = 0;
         ReachedLeft = Line.Words[0].Rect.Left;
         RemaingingWidth = Line.Words[0].LetterOffsetList[0].LetterWidth;
+        IsFirstLetter = true;
     }
 
     public ScanLine Line { get; }
@@ -18,8 +21,9 @@ public class LetterSkimmer
     public int LetterIndex { get; private set; }
     public int ReachedLeft { get; private set; }
     public int RemaingingWidth { get; private set; }
+    public bool IsFirstLetter { get; private set; }
 
-    public bool IsFirstLetter { get { return WordIndex == 0 && LetterIndex == 0; } }
+    public bool IsLastWord { get { return WordIndex + 1 >= Line.Words.Count; } }
     public bool IsLastLetter { get { return (WordIndex >= Line.Words.Count) || (WordIndex == Line.Words.Count - 1 && LetterIndex >= Line.Words[WordIndex].LetterOffsetList.Count - 1); } }
 
     private bool IsBeyondEnd { get { return WordIndex >= Line.Words.Count || LetterIndex >= Line.Words[WordIndex].LetterOffsetList.Count; } }
@@ -49,6 +53,9 @@ public class LetterSkimmer
     public bool MoveNext(int lastIncrement)
     {
         ReachedLeft += lastIncrement;
+
+        if (IsFirstLetter && lastIncrement > 0)
+            IsFirstLetter = false;
 
         int LetterLeft = ReachedLeft;
         int LetterRight;
@@ -82,5 +89,18 @@ public class LetterSkimmer
             return false;
 
         return true;
+    }
+
+    public string DisplayText
+    {
+        get
+        {
+            string Result = string.Empty;
+
+            foreach (ScanWord Word in Line.Words)
+                Result += $"{Word.DisplayText} ";
+
+            return Result;
+        }
     }
 }

@@ -7,19 +7,21 @@ using System.Diagnostics;
 
 public class ScanSpace
 {
-    public ScanSpace(Font font, List<ScanSpaceItem> itemList)
+    public ScanSpace(Font font, List<ScanSpaceItem> itemList, ScanSpaceSearch search, bool isSingleOnly)
     {
-        if (!IsItemListValid(font, itemList))
+        if (!IsItemListValid(font, itemList, isSingleOnly))
             throw new ArgumentException("Invalid list", nameof(itemList));
 
         Font = font;
         ItemList = itemList;
+        Search = search;
     }
 
     public Font Font { get; }
     public List<ScanSpaceItem> ItemList { get; }
+    public ScanSpaceSearch Search { get; }
 
-    private bool IsItemListValid(Font font, List<ScanSpaceItem> itemList)
+    private bool IsItemListValid(Font font, List<ScanSpaceItem> itemList, bool isSingleOnly)
     {
         if (itemList.Count == 0)
             return false;
@@ -30,12 +32,12 @@ public class ScanSpace
 
         string DebugText = itemList[0].DebugText;
 
-        int CharacterCount = CellLoader.AllCharacters.Length + CellLoader.AllSuperscripts.Length;
+        int CharacterCount = CellLoader.AllCharacters.Count + CellLoader.AllSuperscripts.Count;
 
         int TypeFlagBits = typeof(TypeFlags).GetEnumValues().Length - 1;
         int TypeFlagCount = (1 << TypeFlagBits) - 1;
 
-        int IsSingleCount = 2;
+        int IsSingleCount = isSingleOnly ? 1 : 2;
 
         List<double> FontSizeList = new();
         foreach (LetterType LetterType in font.SupportedLetterTypes)
@@ -64,10 +66,10 @@ public class ScanSpace
                             double FontSize = FontSizeList[l];
 
                             bool IsWithinSpace;
-                            if (i < CellLoader.AllCharacters.Length)
+                            if (i < CellLoader.AllCharacters.Count)
                                 IsWithinSpace = Item.IsWithinSpace(CellLoader.AllCharacters[i], TypeFlags, IsSingle, FontSize);
                             else
-                                IsWithinSpace = Item.IsWithinSpace(CellLoader.AllSuperscripts[i - CellLoader.AllCharacters.Length], TypeFlags, IsSingle, FontSize);
+                                IsWithinSpace = Item.IsWithinSpace(CellLoader.AllSuperscripts[i - CellLoader.AllCharacters.Count], TypeFlags, IsSingle, FontSize);
 
                             if (IsWithinSpace)
                             {

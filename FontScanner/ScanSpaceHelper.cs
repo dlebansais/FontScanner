@@ -9,173 +9,272 @@ using System.Linq;
 public static class ScanSpaceHelper
 {
     #region Helper
-    public static ScanSpace Get(Font font, LetterSkimmer skimmer, ScanInfo scanInfo)
+    public static ScanSpace GetPrimary(Font font, LetterSkimmer skimmer)
     {
         if (skimmer.IsFirstLetter)
             return GetFirstLetterScanSpace(font);
         else
-            return GetOtherLetterScanSpace(font, scanInfo);
+            return GetOtherLetterScanSpace(font);
+    }
+
+    public static ScanSpace GetSecondary(Font font)
+    {
+        return GetNextLetterScanSpace(font);
     }
     #endregion
 
     #region First
-    public static List<double> PreferredFirstLetterFontSizeList = new() { 109 };
-    public const string PreferredFirstLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    public static ScanSpaceSearch FirstSearch { get; } = new(new List<char>());
+    public static ScanSpaceSearch OtherSearch { get; } = new(new List<char>() { ',', '.', ';' });
+    public static ScanSpaceSearch NextSearch { get; } = new(new List<char>() { ',', '.', ';' });
 
     public static ScanSpace GetFirstLetterScanSpace(Font font)
     {
         if (FirstLetterScanSpace is null)
         {
             List<ScanSpaceItem> ItemList = new();
+            ScanSpaceSearch Search = FirstSearch;
 
-            FirstAddCommonLetters(ItemList, font, TypeFlags.Normal, isSingle: true);
-            FirstAddCommonLetters(ItemList, font, TypeFlags.Italic, isSingle: true);
-            FirstAddUncommonLetters(ItemList, font, TypeFlags.Normal, isSingle: true);
-            FirstAddCommonLetters(ItemList, font, TypeFlags.Normal, isSingle: false);
-            FirstAddUncommonLetters(ItemList, font, TypeFlags.Normal, isSingle: false);
-            FirstAddCommonLetters(ItemList, font, TypeFlags.Italic, isSingle: false);
-            FirstAddCommonLetters(ItemList, font, TypeFlags.Bold, isSingle: true);
-            FirstAddCommonLetters(ItemList, font, TypeFlags.Blue, isSingle: true);
-            FirstAddUncommonLetters(ItemList, font, TypeFlags.Italic, isSingle: true);
-            FirstAddUncommonLetters(ItemList, font, TypeFlags.Bold, isSingle: true);
-            FirstAddUncommonLetters(ItemList, font, TypeFlags.Blue, isSingle: true);
-            FirstAddUncommonFonts(ItemList, font, TypeFlags.Normal, isSingle: true);
-            FirstAddUncommonFonts(ItemList, font, TypeFlags.Italic, isSingle: true);
-            FirstAddUncommonFonts(ItemList, font, TypeFlags.Bold, isSingle: true);
-            FirstAddUncommonFonts(ItemList, font, TypeFlags.Blue, isSingle: true);
-            FirstAddEverythingElse(ItemList, font, TypeFlags.Italic | TypeFlags.Bold, isSingle: true);
-            FirstAddEverythingElse(ItemList, font, TypeFlags.Blue | TypeFlags.Italic, isSingle: true);
-            FirstAddEverythingElse(ItemList, font, TypeFlags.Blue | TypeFlags.Bold, isSingle: true);
-            FirstAddEverythingElse(ItemList, font, TypeFlags.Blue | TypeFlags.Italic | TypeFlags.Bold, isSingle: true);
-            FirstAddCommonLetters(ItemList, font, TypeFlags.Bold, isSingle: false);
-            FirstAddCommonLetters(ItemList, font, TypeFlags.Blue, isSingle: false);
-            FirstAddUncommonLetters(ItemList, font, TypeFlags.Italic, isSingle: false);
-            FirstAddUncommonLetters(ItemList, font, TypeFlags.Bold, isSingle: false);
-            FirstAddUncommonLetters(ItemList, font, TypeFlags.Blue, isSingle: false);
-            FirstAddUncommonFonts(ItemList, font, TypeFlags.Normal, isSingle: false);
-            FirstAddUncommonFonts(ItemList, font, TypeFlags.Italic, isSingle: false);
-            FirstAddUncommonFonts(ItemList, font, TypeFlags.Bold, isSingle: false);
-            FirstAddUncommonFonts(ItemList, font, TypeFlags.Blue, isSingle: false);
-            FirstAddEverythingElse(ItemList, font, TypeFlags.Italic | TypeFlags.Bold, isSingle: false);
-            FirstAddEverythingElse(ItemList, font, TypeFlags.Blue | TypeFlags.Italic, isSingle: false);
-            FirstAddEverythingElse(ItemList, font, TypeFlags.Blue | TypeFlags.Bold, isSingle: false);
-            FirstAddEverythingElse(ItemList, font, TypeFlags.Blue | TypeFlags.Italic | TypeFlags.Bold, isSingle: false);
+            AddCommonLetters(ItemList, font, Search, TypeFlags.Normal, isSingle: true, isPreferredFont: true);
+            AddCommonLetters(ItemList, font, Search, TypeFlags.Italic, isSingle: true, isPreferredFont: true);
+            AddUncommonLetters(ItemList, font, Search, TypeFlags.Normal, isSingle: true, isPreferredFont: true);
+            AddCommonLetters(ItemList, font, Search, TypeFlags.Normal, isSingle: false, isPreferredFont: true);
+            AddUncommonLetters(ItemList, font, Search, TypeFlags.Normal, isSingle: false, isPreferredFont: true);
+            AddCommonLetters(ItemList, font, Search, TypeFlags.Italic, isSingle: false, isPreferredFont: true);
+            AddUncommonLetters(ItemList, font, Search, TypeFlags.Italic, isSingle: false, isPreferredFont: true);
+            AddCommonLetters(ItemList, font, Search, TypeFlags.Bold, isSingle: true, isPreferredFont: true);
+            AddCommonLetters(ItemList, font, Search, TypeFlags.Blue, isSingle: true, isPreferredFont: true);
+            AddUncommonLetters(ItemList, font, Search, TypeFlags.Italic, isSingle: true, isPreferredFont: true);
+            AddUncommonLetters(ItemList, font, Search, TypeFlags.Bold, isSingle: true, isPreferredFont: true);
+            AddUncommonLetters(ItemList, font, Search, TypeFlags.Blue, isSingle: true, isPreferredFont: true);
+            AddCommonLetters(ItemList, font, Search, TypeFlags.Normal, isSingle: true, isPreferredFont: false);
+            AddCommonLetters(ItemList, font, Search, TypeFlags.Bold, isSingle: true, isPreferredFont: false);
+            AddCommonLetters(ItemList, font, Search, TypeFlags.Italic, isSingle: true, isPreferredFont: false);
+            AddUncommonLetters(ItemList, font, Search, TypeFlags.Normal, isSingle: true, isPreferredFont: false);
+            AddCommonLetters(ItemList, font, Search, TypeFlags.Normal, isSingle: false, isPreferredFont: false);
+            AddUncommonLetters(ItemList, font, Search, TypeFlags.Normal, isSingle: false, isPreferredFont: false);
+            AddCommonLetters(ItemList, font, Search, TypeFlags.Italic, isSingle: false, isPreferredFont: false);
+            AddUncommonLetters(ItemList, font, Search, TypeFlags.Italic, isSingle: false, isPreferredFont: false);
+            AddCommonLetters(ItemList, font, Search, TypeFlags.Blue, isSingle: true, isPreferredFont: false);
+            AddUncommonLetters(ItemList, font, Search, TypeFlags.Italic, isSingle: true, isPreferredFont: false);
+            AddUncommonLetters(ItemList, font, Search, TypeFlags.Bold, isSingle: true, isPreferredFont: false);
+            AddUncommonLetters(ItemList, font, Search, TypeFlags.Blue, isSingle: true, isPreferredFont: false);
+            AddCommonLetters(ItemList, font, Search, TypeFlags.Blue, isSingle: false, isPreferredFont: true);
+            AddUncommonFonts(ItemList, font, Search, TypeFlags.Bold, isSingle: true);
+            AddUncommonFonts(ItemList, font, Search, TypeFlags.Normal, isSingle: true);
+            AddUncommonFonts(ItemList, font, Search, TypeFlags.Italic, isSingle: true);
+            AddUncommonFonts(ItemList, font, Search, TypeFlags.Blue, isSingle: true);
+            AddEverythingElse(ItemList, font, TypeFlags.Italic | TypeFlags.Bold, isSingle: true);
+            AddEverythingElse(ItemList, font, TypeFlags.Blue | TypeFlags.Italic, isSingle: true);
+            AddEverythingElse(ItemList, font, TypeFlags.Blue | TypeFlags.Bold, isSingle: true);
+            AddEverythingElse(ItemList, font, TypeFlags.Blue | TypeFlags.Italic | TypeFlags.Bold, isSingle: true);
+            AddCommonLetters(ItemList, font, Search, TypeFlags.Bold, isSingle: false, isPreferredFont: true);
+            AddUncommonLetters(ItemList, font, Search, TypeFlags.Bold, isSingle: false, isPreferredFont: true);
+            AddUncommonLetters(ItemList, font, Search, TypeFlags.Blue, isSingle: false, isPreferredFont: true);
+            AddCommonLetters(ItemList, font, Search, TypeFlags.Bold, isSingle: false, isPreferredFont: false);
+            AddCommonLetters(ItemList, font, Search, TypeFlags.Blue, isSingle: false, isPreferredFont: false);
+            AddUncommonLetters(ItemList, font, Search, TypeFlags.Bold, isSingle: false, isPreferredFont: false);
+            AddUncommonLetters(ItemList, font, Search, TypeFlags.Blue, isSingle: false, isPreferredFont: false);
+            AddUncommonFonts(ItemList, font, Search, TypeFlags.Normal, isSingle: false);
+            AddUncommonFonts(ItemList, font, Search, TypeFlags.Italic, isSingle: false);
+            AddUncommonFonts(ItemList, font, Search, TypeFlags.Bold, isSingle: false);
+            AddUncommonFonts(ItemList, font, Search, TypeFlags.Blue, isSingle: false);
+            AddEverythingElse(ItemList, font, TypeFlags.Italic | TypeFlags.Bold, isSingle: false);
+            AddEverythingElse(ItemList, font, TypeFlags.Blue | TypeFlags.Italic, isSingle: false);
+            AddEverythingElse(ItemList, font, TypeFlags.Blue | TypeFlags.Bold, isSingle: false);
+            AddEverythingElse(ItemList, font, TypeFlags.Blue | TypeFlags.Italic | TypeFlags.Bold, isSingle: false);
 
-            FirstLetterScanSpace = new ScanSpace(font, ItemList);
+            FirstLetterScanSpace = new ScanSpace(font, ItemList, Search, isSingleOnly: false);
         }
 
         return FirstLetterScanSpace;
     }
 
-    private static void FirstAddCommonLetters(List<ScanSpaceItem> itemList, Font font, TypeFlags typeFlags, bool isSingle)
+    public static ScanSpace GetOtherLetterScanSpace(Font font)
     {
-        ScanSpaceItem NewItem = new(font);
+        if (OtherLetterScanSpace is null)
+        {
+            List<ScanSpaceItem> ItemList = new();
+            ScanSpaceSearch Search = OtherSearch;
 
-        foreach (char c in PreferredFirstLetters)
-            NewItem.CharacterList.Add(c);
+            AddCommonLetters(ItemList, font, Search, TypeFlags.Normal, isSingle: true, isPreferredFont: true);
+            AddCommonLetters(ItemList, font, Search, TypeFlags.Italic, isSingle: true, isPreferredFont: true);
+            AddUncommonLetters(ItemList, font, Search, TypeFlags.Normal, isSingle: true, isPreferredFont: true);
+            AddUncommonLetters(ItemList, font, Search, TypeFlags.Italic, isSingle: true, isPreferredFont: true);
+            AddCommonLetters(ItemList, font, Search, TypeFlags.Normal, isSingle: false, isPreferredFont: true);
+            AddUncommonLetters(ItemList, font, Search, TypeFlags.Normal, isSingle: false, isPreferredFont: true);
+            AddCommonLetters(ItemList, font, Search, TypeFlags.Italic, isSingle: false, isPreferredFont: true);
+            AddCommonLetters(ItemList, font, Search, TypeFlags.Bold, isSingle: false, isPreferredFont: true);
+            AddCommonLetters(ItemList, font, Search, TypeFlags.Blue, isSingle: false, isPreferredFont: true);
+            AddUncommonLetters(ItemList, font, Search, TypeFlags.Italic, isSingle: false, isPreferredFont: true);
+            AddUncommonLetters(ItemList, font, Search, TypeFlags.Bold, isSingle: false, isPreferredFont: true);
+            AddUncommonLetters(ItemList, font, Search, TypeFlags.Blue, isSingle: false, isPreferredFont: true);
+            AddCommonLetters(ItemList, font, Search, TypeFlags.Bold, isSingle: true, isPreferredFont: true);
+            AddCommonLetters(ItemList, font, Search, TypeFlags.Blue, isSingle: true, isPreferredFont: true);
+            AddUncommonLetters(ItemList, font, Search, TypeFlags.Bold, isSingle: true, isPreferredFont: true);
+            AddUncommonLetters(ItemList, font, Search, TypeFlags.Blue, isSingle: true, isPreferredFont: true);
+            AddCommonLetters(ItemList, font, Search, TypeFlags.Normal, isSingle: true, isPreferredFont: false);
+            AddCommonLetters(ItemList, font, Search, TypeFlags.Italic, isSingle: true, isPreferredFont: false);
+            AddUncommonLetters(ItemList, font, Search, TypeFlags.Normal, isSingle: true, isPreferredFont: false);
+            AddUncommonLetters(ItemList, font, Search, TypeFlags.Italic, isSingle: true, isPreferredFont: false);
+            AddCommonLetters(ItemList, font, Search, TypeFlags.Normal, isSingle: false, isPreferredFont: false);
+            AddUncommonLetters(ItemList, font, Search, TypeFlags.Normal, isSingle: false, isPreferredFont: false);
+            AddCommonLetters(ItemList, font, Search, TypeFlags.Italic, isSingle: false, isPreferredFont: false);
+            AddCommonLetters(ItemList, font, Search, TypeFlags.Bold, isSingle: false, isPreferredFont: false);
+            AddCommonLetters(ItemList, font, Search, TypeFlags.Blue, isSingle: false, isPreferredFont: false);
+            AddUncommonLetters(ItemList, font, Search, TypeFlags.Italic, isSingle: false, isPreferredFont: false);
+            AddUncommonLetters(ItemList, font, Search, TypeFlags.Bold, isSingle: false, isPreferredFont: false);
+            AddUncommonLetters(ItemList, font, Search, TypeFlags.Blue, isSingle: false, isPreferredFont: false);
+            AddCommonLetters(ItemList, font, Search, TypeFlags.Bold, isSingle: true, isPreferredFont: false);
+            AddCommonLetters(ItemList, font, Search, TypeFlags.Blue, isSingle: true, isPreferredFont: false);
+            AddUncommonLetters(ItemList, font, Search, TypeFlags.Bold, isSingle: true, isPreferredFont: false);
+            AddUncommonLetters(ItemList, font, Search, TypeFlags.Blue, isSingle: true, isPreferredFont: false);
+            AddUncommonFonts(ItemList, font, Search, TypeFlags.Normal, isSingle: true);
+            AddUncommonFonts(ItemList, font, Search, TypeFlags.Italic, isSingle: true);
+            AddUncommonFonts(ItemList, font, Search, TypeFlags.Bold, isSingle: true);
+            AddUncommonFonts(ItemList, font, Search, TypeFlags.Blue, isSingle: true);
+            AddEverythingElse(ItemList, font, TypeFlags.Italic | TypeFlags.Bold, isSingle: true);
+            AddEverythingElse(ItemList, font, TypeFlags.Blue | TypeFlags.Italic, isSingle: true);
+            AddEverythingElse(ItemList, font, TypeFlags.Blue | TypeFlags.Bold, isSingle: true);
+            AddEverythingElse(ItemList, font, TypeFlags.Blue | TypeFlags.Italic | TypeFlags.Bold, isSingle: true);
+            AddUncommonFonts(ItemList, font, Search, TypeFlags.Normal, isSingle: false);
+            AddUncommonFonts(ItemList, font, Search, TypeFlags.Italic, isSingle: false);
+            AddUncommonFonts(ItemList, font, Search, TypeFlags.Bold, isSingle: false);
+            AddUncommonFonts(ItemList, font, Search, TypeFlags.Blue, isSingle: false);
+            AddEverythingElse(ItemList, font, TypeFlags.Italic | TypeFlags.Bold, isSingle: false);
+            AddEverythingElse(ItemList, font, TypeFlags.Blue | TypeFlags.Italic, isSingle: false);
+            AddEverythingElse(ItemList, font, TypeFlags.Blue | TypeFlags.Bold, isSingle: false);
+            AddEverythingElse(ItemList, font, TypeFlags.Blue | TypeFlags.Italic | TypeFlags.Bold, isSingle: false);
 
-        NewItem.TypeFlags = typeFlags;
-        NewItem.IsSingle = isSingle;
-        NewItem.FontSizeList.AddRange(PreferredFirstLetterFontSizeList);
+            OtherLetterScanSpace = new ScanSpace(font, ItemList, Search, isSingleOnly: false);
+        }
+
+        return OtherLetterScanSpace;
+    }
+
+    public static ScanSpace GetNextLetterScanSpace(Font font)
+    {
+        if (NextLetterScanSpace is null)
+        {
+            List<ScanSpaceItem> ItemList = new();
+            ScanSpaceSearch Search = NextSearch;
+
+            AddCommonLetters(ItemList, font, Search, TypeFlags.Normal, isSingle: true, isPreferredFont: true);
+            AddCommonLetters(ItemList, font, Search, TypeFlags.Italic, isSingle: true, isPreferredFont: true);
+            AddUncommonLetters(ItemList, font, Search, TypeFlags.Normal, isSingle: true, isPreferredFont: true);
+            AddUncommonLetters(ItemList, font, Search, TypeFlags.Italic, isSingle: true, isPreferredFont: true);
+            AddCommonLetters(ItemList, font, Search, TypeFlags.Bold, isSingle: true, isPreferredFont: true);
+            AddCommonLetters(ItemList, font, Search, TypeFlags.Blue, isSingle: true, isPreferredFont: true);
+            AddUncommonLetters(ItemList, font, Search, TypeFlags.Bold, isSingle: true, isPreferredFont: true);
+            AddUncommonLetters(ItemList, font, Search, TypeFlags.Blue, isSingle: true, isPreferredFont: true);
+            AddCommonLetters(ItemList, font, Search, TypeFlags.Normal, isSingle: true, isPreferredFont: false);
+            AddCommonLetters(ItemList, font, Search, TypeFlags.Italic, isSingle: true, isPreferredFont: false);
+            AddUncommonLetters(ItemList, font, Search, TypeFlags.Normal, isSingle: true, isPreferredFont: false);
+            AddUncommonLetters(ItemList, font, Search, TypeFlags.Italic, isSingle: true, isPreferredFont: false);
+            AddCommonLetters(ItemList, font, Search, TypeFlags.Bold, isSingle: true, isPreferredFont: false);
+            AddCommonLetters(ItemList, font, Search, TypeFlags.Blue, isSingle: true, isPreferredFont: false);
+            AddUncommonLetters(ItemList, font, Search, TypeFlags.Bold, isSingle: true, isPreferredFont: false);
+            AddUncommonLetters(ItemList, font, Search, TypeFlags.Blue, isSingle: true, isPreferredFont: false);
+            AddUncommonFonts(ItemList, font, Search, TypeFlags.Normal, isSingle: true);
+            AddUncommonFonts(ItemList, font, Search, TypeFlags.Italic, isSingle: true);
+            AddUncommonFonts(ItemList, font, Search, TypeFlags.Bold, isSingle: true);
+            AddUncommonFonts(ItemList, font, Search, TypeFlags.Blue, isSingle: true);
+            AddEverythingElse(ItemList, font, TypeFlags.Italic | TypeFlags.Bold, isSingle: true);
+            AddEverythingElse(ItemList, font, TypeFlags.Blue | TypeFlags.Italic, isSingle: true);
+            AddEverythingElse(ItemList, font, TypeFlags.Blue | TypeFlags.Bold, isSingle: true);
+            AddEverythingElse(ItemList, font, TypeFlags.Blue | TypeFlags.Italic | TypeFlags.Bold, isSingle: true);
+
+            NextLetterScanSpace = new ScanSpace(font, ItemList, Search, isSingleOnly: true);
+        }
+
+        return NextLetterScanSpace;
+    }
+
+    private static void AddCommonLetters(List<ScanSpaceItem> itemList, Font font, ScanSpaceSearch search, TypeFlags typeFlags, bool isSingle, bool isPreferredFont)
+    {
+        List<char> CharacterList = search.PreferredLetters;
+        CharacterPreferenceNew CharacterPreference = CharacterPreferenceNew.Preferred;
+        List<double> FontSizeList = isPreferredFont ? search.PreferredLetterFontSizeList : search.UsedLetterFontSizeList;
+        FontPreference FontPreference = isPreferredFont ? FontPreference.Preferred : FontPreference.OtherUsed;
+
+        ScanSpaceItem NewItem = new(font, typeFlags, isSingle, CharacterList, CharacterPreference, FontSizeList, FontPreference);
 
         itemList.Add(NewItem);
     }
 
-    private static void FirstAddUncommonLetters(List<ScanSpaceItem> itemList, Font font, TypeFlags typeFlags, bool isSingle)
+    private static void AddUncommonLetters(List<ScanSpaceItem> itemList, Font font, ScanSpaceSearch search, TypeFlags typeFlags, bool isSingle, bool isPreferredFont)
     {
-        ScanSpaceItem NewItem = new(font);
-
+        List<char> CharacterList = new();
         foreach (char c in CellLoader.AllCharacters)
-            if (PreferredFirstLetters.IndexOf(c) < 0)
-                NewItem.CharacterList.Add(c);
+            if (!search.PreferredLetters.Contains(c))
+                CharacterList.Add(c);
+        CharacterPreferenceNew CharacterPreference = CharacterPreferenceNew.AllOthers;
 
+        List<double> FontSizeList = isPreferredFont ? search.PreferredLetterFontSizeList : search.UsedLetterFontSizeList;
+        FontPreference FontPreference = isPreferredFont ? FontPreference.Preferred : FontPreference.OtherUsed;
+
+        ScanSpaceItem NewItem = new(font, typeFlags, isSingle, CharacterList, CharacterPreference, FontSizeList, FontPreference);
         NewItem.SuperscriptList.AddRange(CellLoader.AllSuperscripts);
-        NewItem.TypeFlags = typeFlags;
-        NewItem.IsSingle = isSingle;
-        NewItem.FontSizeList.AddRange(PreferredFirstLetterFontSizeList);
 
         itemList.Add(NewItem);
     }
 
-    private static void FirstAddUncommonFonts(List<ScanSpaceItem> itemList, Font font, TypeFlags typeFlags, bool isSingle)
+    private static void AddUncommonFonts(List<ScanSpaceItem> itemList, Font font, ScanSpaceSearch search, TypeFlags typeFlags, bool isSingle)
     {
         List<double> FontSizeList = new(font.FontSizeList);
-        foreach (double FontSize in PreferredFirstLetterFontSizeList)
+        foreach (double FontSize in search.PreferredLetterFontSizeList)
+            FontSizeList.Remove(FontSize);
+        foreach (double FontSize in search.UsedLetterFontSizeList)
             FontSizeList.Remove(FontSize);
 
-        ScanSpaceItem NewItem = new(font);
-        NewItem.CharacterList.AddRange(CellLoader.AllCharacters);
-        NewItem.SuperscriptList.AddRange(CellLoader.AllSuperscripts);
-        NewItem.TypeFlags = typeFlags;
-        NewItem.IsSingle = isSingle;
-        NewItem.FontSizeList.AddRange(FontSizeList);
+        ScanSpaceItem NewItem = new(font, typeFlags, isSingle);
+        NewItem.AddCharacters(CellLoader.AllCharacters);
+        NewItem.AddSuperscripts(CellLoader.AllSuperscripts);
+        NewItem.AddFontSizes(FontSizeList);
 
         itemList.Add(NewItem);
     }
 
-    private static void FirstAddEverythingElse(List<ScanSpaceItem> itemList, Font font, TypeFlags typeFlags, bool isSingle)
+    private static void AddEverythingElse(List<ScanSpaceItem> itemList, Font font, TypeFlags typeFlags, bool isSingle)
     {
-        ScanSpaceItem NewItem = new(font);
-        NewItem.CharacterList.AddRange(CellLoader.AllCharacters);
-        NewItem.SuperscriptList.AddRange(CellLoader.AllSuperscripts);
-        NewItem.TypeFlags = typeFlags;
-        NewItem.IsSingle = isSingle;
-        NewItem.FontSizeList.AddRange(font.FontSizeList);
+        ScanSpaceItem NewItem = new(font, typeFlags, isSingle);
+        NewItem.AddCharacters(CellLoader.AllCharacters);
+        NewItem.AddSuperscripts(CellLoader.AllSuperscripts);
+        NewItem.AddFontSizes(font.FontSizeList);
 
         itemList.Add(NewItem);
     }
 
     private static ScanSpace? FirstLetterScanSpace = null;
+    private static ScanSpace? OtherLetterScanSpace = null;
+    private static ScanSpace? NextLetterScanSpace = null;
     #endregion
 
-    #region Other
-    public static List<double> PreferredOtherLetterFontSizeList = new() { 109 };
-    public const string PreferredOtherLetters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-    public static ScanSpace GetOtherLetterScanSpace(Font font, ScanInfo scanInfo)
+    #region Optimization
+    public static void InitializePreferredFonts(List<double> preferredFontSizeList)
     {
-        if (OtherLetterScanSpace is null)
-        {
-            List<ScanSpaceItem> ItemList = new();
-            OtherAddCommonLetters(ItemList, font, TypeFlags.Normal, isSingle: true);
-            OtherAddCommonLetters(ItemList, font, TypeFlags.Italic, isSingle: true);
-            OtherAddUncommonLetters(ItemList, font, TypeFlags.Normal, isSingle: true);
-            OtherAddCommonLetters(ItemList, font, TypeFlags.Normal, isSingle: false);
-            OtherAddUncommonLetters(ItemList, font, TypeFlags.Normal, isSingle: false);
-            OtherAddCommonLetters(ItemList, font, TypeFlags.Italic, isSingle: false);
-            OtherAddCommonLetters(ItemList, font, TypeFlags.Bold, isSingle: false);
-            OtherAddCommonLetters(ItemList, font, TypeFlags.Blue, isSingle: false);
-            OtherAddUncommonLetters(ItemList, font, TypeFlags.Italic, isSingle: false);
-            OtherAddUncommonLetters(ItemList, font, TypeFlags.Bold, isSingle: false);
-            OtherAddUncommonLetters(ItemList, font, TypeFlags.Blue, isSingle: false);
-            OtherAddCommonLetters(ItemList, font, TypeFlags.Bold, isSingle: true);
-            OtherAddCommonLetters(ItemList, font, TypeFlags.Blue, isSingle: true);
-            OtherAddUncommonLetters(ItemList, font, TypeFlags.Italic, isSingle: true);
-            OtherAddUncommonLetters(ItemList, font, TypeFlags.Bold, isSingle: true);
-            OtherAddUncommonLetters(ItemList, font, TypeFlags.Blue, isSingle: true);
-            OtherAddUncommonFonts(ItemList, font, TypeFlags.Normal, isSingle: true);
-            OtherAddUncommonFonts(ItemList, font, TypeFlags.Italic, isSingle: true);
-            OtherAddUncommonFonts(ItemList, font, TypeFlags.Bold, isSingle: true);
-            OtherAddUncommonFonts(ItemList, font, TypeFlags.Blue, isSingle: true);
-            OtherAddEverythingElse(ItemList, font, TypeFlags.Italic | TypeFlags.Bold, isSingle: true);
-            OtherAddEverythingElse(ItemList, font, TypeFlags.Blue | TypeFlags.Italic, isSingle: true);
-            OtherAddEverythingElse(ItemList, font, TypeFlags.Blue | TypeFlags.Bold, isSingle: true);
-            OtherAddEverythingElse(ItemList, font, TypeFlags.Blue | TypeFlags.Italic | TypeFlags.Bold, isSingle: true);
-            OtherAddUncommonFonts(ItemList, font, TypeFlags.Normal, isSingle: false);
-            OtherAddUncommonFonts(ItemList, font, TypeFlags.Italic, isSingle: false);
-            OtherAddUncommonFonts(ItemList, font, TypeFlags.Bold, isSingle: false);
-            OtherAddUncommonFonts(ItemList, font, TypeFlags.Blue, isSingle: false);
-            OtherAddEverythingElse(ItemList, font, TypeFlags.Italic | TypeFlags.Bold, isSingle: false);
-            OtherAddEverythingElse(ItemList, font, TypeFlags.Blue | TypeFlags.Italic, isSingle: false);
-            OtherAddEverythingElse(ItemList, font, TypeFlags.Blue | TypeFlags.Bold, isSingle: false);
-            OtherAddEverythingElse(ItemList, font, TypeFlags.Blue | TypeFlags.Italic | TypeFlags.Bold, isSingle: false);
+        FirstSearch.InitializePreferredFonts(preferredFontSizeList);
+        OtherSearch.InitializePreferredFonts(preferredFontSizeList);
+        NextSearch.InitializePreferredFonts(preferredFontSizeList);
+    }
 
-            OtherLetterScanSpace = new ScanSpace(font, ItemList);
-        }
+    public static void OptimizeFromLastScan(Font font, LetterSkimmer skimmer, ScanInfo scanInfo)
+    {
+        if (skimmer.IsFirstLetter)
+            OptimizeFirstFromLastScan(font, scanInfo);
+        else
+            OptimizeOtherFromLastScan(font, scanInfo);
+    }
+
+    public static void OptimizeFirstFromLastScan(Font font, ScanInfo scanInfo)
+    {
+        ScanSpace FirstLetterScanSpace = GetFirstLetterScanSpace(font);
+        ScanSpace OtherLetterScanSpace = GetOtherLetterScanSpace(font);
+        ScanSpace NextLetterScanSpace = GetNextLetterScanSpace(font);
 
         Letter LastLetter = scanInfo.PreviousLetter;
-        LetterType LastLetterType = scanInfo.LetterType;
-        double LastFontSize = scanInfo.LetterType.FontSize;
+        LetterType LastLetterType = LastLetter.LetterType;
+        double LastFontSize = LastLetterType.FontSize;
 
         TypeFlags LastTypeFlags = TypeFlags.Normal;
         if (LastLetterType.IsBlue)
@@ -185,115 +284,158 @@ public static class ScanSpaceHelper
         if (LastLetterType.IsBold)
             LastTypeFlags |= TypeFlags.Bold;
 
-        if (LastLetterType.FontSize != 0)
+        Debug.Assert(LastFontSize != 0);
+
+        MoveFontSizeToPreferred(FirstLetterScanSpace, LastFontSize);
+        MoveFontSizeToPreferred(OtherLetterScanSpace, LastFontSize);
+        MoveFontSizeToPreferred(NextLetterScanSpace, LastFontSize);
+        MoveLastFontSizeToFirstPosition(FirstLetterScanSpace, LastFontSize);
+        MoveLastFontSizeToFirstPosition(OtherLetterScanSpace, LastFontSize);
+        MoveLastFontSizeToFirstPosition(NextLetterScanSpace, LastFontSize);
+        MovePreviousTypeToFirstPosition(FirstLetterScanSpace, LastTypeFlags, LastFontSize);
+        MovePreviousTypeToFirstPosition(OtherLetterScanSpace, LastTypeFlags, LastFontSize);
+        MovePreviousTypeToFirstPosition(NextLetterScanSpace, LastTypeFlags, LastFontSize);
+    }
+
+    public static void OptimizeOtherFromLastScan(Font font, ScanInfo scanInfo)
+    {
+        ScanSpace OtherLetterScanSpace = GetOtherLetterScanSpace(font);
+        ScanSpace NextLetterScanSpace = GetNextLetterScanSpace(font);
+
+        Letter LastLetter = scanInfo.PreviousLetter;
+        LetterType LastLetterType = LastLetter.LetterType;
+        double LastFontSize = LastLetterType.FontSize;
+
+        TypeFlags LastTypeFlags = TypeFlags.Normal;
+        if (LastLetterType.IsBlue)
+            LastTypeFlags |= TypeFlags.Blue;
+        if (LastLetterType.IsItalic)
+            LastTypeFlags |= TypeFlags.Italic;
+        if (LastLetterType.IsBold)
+            LastTypeFlags |= TypeFlags.Bold;
+
+        Debug.Assert(LastFontSize != 0);
+
+        MoveFontSizeToPreferred(OtherLetterScanSpace, LastFontSize);
+        MoveLastFontSizeToFirstPosition(OtherLetterScanSpace, LastFontSize);
+        MovePreviousTypeToFirstPosition(OtherLetterScanSpace, LastTypeFlags, LastFontSize);
+        MovePreviousLetterToFirstPosition(OtherLetterScanSpace, LastTypeFlags, LastFontSize, LastLetter);
+
+        MoveFontSizeToPreferred(NextLetterScanSpace, LastFontSize);
+        MoveLastFontSizeToFirstPosition(NextLetterScanSpace, LastFontSize);
+        MovePreviousTypeToFirstPosition(NextLetterScanSpace, LastTypeFlags, LastFontSize);
+        MovePreviousLetterToFirstPosition(NextLetterScanSpace, LastTypeFlags, LastFontSize, LastLetter);
+
+        Letter ExpectedNextLetter = scanInfo.ExpectedNextLetter;
+        if (ExpectedNextLetter != Letter.EmptyNormal)
         {
-            MoveLastFontSizeToFirstPosition(OtherLetterScanSpace.ItemList, LastFontSize);
-            MovePreviousTypeToFirstPosition(OtherLetterScanSpace.ItemList, LastTypeFlags, LastFontSize);
-            MovePreviousLetterToFirstPosition(OtherLetterScanSpace.ItemList, LastTypeFlags, LastFontSize, LastLetter);
+            LetterType ExpectedNextLetterType = ExpectedNextLetter.LetterType;
+            double ExpectedNextLetterFontSize = ExpectedNextLetterType.FontSize;
+
+            if (ExpectedNextLetterFontSize != LastFontSize)
+                MoveLastFontSizeToFirstPosition(NextLetterScanSpace, ExpectedNextLetterFontSize);
+
+            TypeFlags ExpectedNextTypeFlags = TypeFlags.Normal;
+            if (ExpectedNextLetterType.IsBlue)
+                ExpectedNextTypeFlags |= TypeFlags.Blue;
+            if (ExpectedNextLetterType.IsItalic)
+                ExpectedNextTypeFlags |= TypeFlags.Italic;
+            if (ExpectedNextLetterType.IsBold)
+                ExpectedNextTypeFlags |= TypeFlags.Bold;
+
+            if (ExpectedNextTypeFlags != LastTypeFlags)
+                MovePreviousTypeToFirstPosition(NextLetterScanSpace, LastTypeFlags, LastFontSize);
+
+            MovePreviousLetterToFirstPosition(NextLetterScanSpace, LastTypeFlags, LastFontSize, ExpectedNextLetter);
         }
-
-        return OtherLetterScanSpace;
     }
 
-    private static void OtherAddCommonLetters(List<ScanSpaceItem> itemList, Font font, TypeFlags typeFlags, bool isSingle)
+    private static void MoveFontSizeToPreferred(ScanSpace scanSpace, double lastFontSize)
     {
-        ScanSpaceItem NewItem = new(font);
+        List<ScanSpaceItem> ItemList = scanSpace.ItemList;
+        ScanSpaceSearch Search = scanSpace.Search;
 
-        foreach (char c in PreferredOtherLetters)
-            NewItem.CharacterList.Add(c);
+        Debug.Assert(Search.PreferredLetterFontSizeList.Count == 1);
 
-        NewItem.TypeFlags = typeFlags;
-        NewItem.IsSingle = isSingle;
-        NewItem.FontSizeList.AddRange(PreferredOtherLetterFontSizeList);
+        if (Search.PreferredLetterFontSizeList[0] == lastFontSize)
+            return;
 
-        itemList.Add(NewItem);
+        double PreviousPreferredFontSize = Search.PreferredLetterFontSizeList[0];
+        Search.UsedLetterFontSizeList.Insert(0, PreviousPreferredFontSize);
+        Search.PreferredLetterFontSizeList[0] = lastFontSize;
+
+        if (Search.UsedLetterFontSizeList.Contains(lastFontSize))
+        {
+            Debug.Assert(Search.UsedLetterFontSizeList.Count > 1);
+            Search.UsedLetterFontSizeList.Remove(lastFontSize);
+        }
+        else
+        {
+            foreach (ScanSpaceItem Item in ItemList)
+                if (Item.FontSizeList != Search.PreferredLetterFontSizeList && Item.FontSizeList != Search.UsedLetterFontSizeList)
+                    Item.RemoveFontSize(lastFontSize);
+        }
     }
 
-    private static void OtherAddUncommonLetters(List<ScanSpaceItem> itemList, Font font, TypeFlags typeFlags, bool isSingle)
+    private static void MoveLastFontSizeToFirstPosition(ScanSpace scanSpace, double lastFontSize)
     {
-        ScanSpaceItem NewItem = new(font);
+        List<ScanSpaceItem> ItemList = scanSpace.ItemList;
 
-        foreach (char c in CellLoader.AllCharacters)
-            if (PreferredOtherLetters.IndexOf(c) < 0)
-                NewItem.CharacterList.Add(c);
+        foreach (ScanSpaceItem Item in ItemList)
+        {
+            IReadOnlyList<double> FontSizeList = Item.FontSizeList;
 
-        NewItem.SuperscriptList.AddRange(CellLoader.AllSuperscripts);
-        NewItem.TypeFlags = typeFlags;
-        NewItem.IsSingle = isSingle;
-        NewItem.FontSizeList.AddRange(PreferredOtherLetterFontSizeList);
-
-        itemList.Add(NewItem);
+            if (FontSizeList.Count > 0 && FontSizeList[0] != lastFontSize && Item.RemoveFontSize(lastFontSize))
+                Item.InsertFontSize(lastFontSize);
+        }
     }
 
-    private static void OtherAddUncommonFonts(List<ScanSpaceItem> itemList, Font font, TypeFlags typeFlags, bool isSingle)
+    private static void MovePreviousTypeToFirstPosition(ScanSpace scanSpace, TypeFlags typeFlags, double lastFontSize)
     {
-        List<double> FontSizeList = new(font.FontSizeList);
-        foreach (double FontSize in PreferredOtherLetterFontSizeList)
-            FontSizeList.Remove(FontSize);
+        List<ScanSpaceItem> ItemList = scanSpace.ItemList;
+        List<ScanSpaceItem> MovedItemList = new();
 
-        ScanSpaceItem NewItem = new(font);
-        NewItem.CharacterList.AddRange(CellLoader.AllCharacters);
-        NewItem.SuperscriptList.AddRange(CellLoader.AllSuperscripts);
-        NewItem.TypeFlags = typeFlags;
-        NewItem.IsSingle = isSingle;
-        NewItem.FontSizeList.AddRange(FontSizeList);
+        foreach (ScanSpaceItem Item in ItemList)
+            if (Item.FontSizeList[0] == lastFontSize && Item.TypeFlags == typeFlags)
+                MovedItemList.Add(Item);
 
-        itemList.Add(NewItem);
+        MovedItemList.Sort(SortBySingleThenCharacterPreference);
+
+        // Apply the sort inversed
+        foreach (ScanSpaceItem Item in MovedItemList)
+        {
+            ItemList.Remove(Item);
+            ItemList.Insert(0, Item);
+        }
     }
 
-    private static void OtherAddEverythingElse(List<ScanSpaceItem> itemList, Font font, TypeFlags typeFlags, bool isSingle)
+    private static void MovePreviousLetterToFirstPosition(ScanSpace scanSpace, TypeFlags typeFlags, double lastFontSize, Letter lastLetter)
     {
-        ScanSpaceItem NewItem = new(font);
-        NewItem.CharacterList.AddRange(CellLoader.AllCharacters);
-        NewItem.SuperscriptList.AddRange(CellLoader.AllSuperscripts);
-        NewItem.TypeFlags = typeFlags;
-        NewItem.IsSingle = isSingle;
-        NewItem.FontSizeList.AddRange(font.FontSizeList);
+        List<ScanSpaceItem> ItemList = scanSpace.ItemList;
+        ScanSpaceSearch Search = scanSpace.Search;
 
-        itemList.Add(NewItem);
-    }
-
-    private static void MoveLastFontSizeToFirstPosition(List<ScanSpaceItem> itemList, double lastFontSize)
-    {
-        foreach (ScanSpaceItem Item in itemList)
-            MoveLastFontSizeToFirstPosition(Item, lastFontSize);
-    }
-
-    private static void MoveLastFontSizeToFirstPosition(ScanSpaceItem item, double lastFontSize)
-    {
-        List<double> FontSizeList = item.FontSizeList;
-
-        if (FontSizeList.Count > 0 && FontSizeList[0] != lastFontSize && FontSizeList.Remove(lastFontSize))
-            FontSizeList.Insert(0, lastFontSize);
-    }
-
-    private static void MovePreviousTypeToFirstPosition(List<ScanSpaceItem> itemList, TypeFlags typeFlags, double lastFontSize)
-    {
-        foreach (ScanSpaceItem Item in itemList)
-            if (Item.FontSizeList[0] == lastFontSize && Item.TypeFlags == typeFlags && Item.CharacterList.Count == PreferredOtherLetters.Length)
-            {
-                itemList.Remove(Item);
-                itemList.Insert(0, Item);
-                break;
-            }
-    }
-
-    private static void MovePreviousLetterToFirstPosition(List<ScanSpaceItem> itemList, TypeFlags typeFlags, double lastFontSize, Letter lastLetter)
-    {
         if (lastLetter.Text.Length == 1)
         {
             char LastCharacter = lastLetter.Text[0];
 
-            foreach (ScanSpaceItem Item in itemList)
-                if (Item.FontSizeList[0] == lastFontSize && Item.TypeFlags == typeFlags && Item.CharacterList.Contains(LastCharacter))
+            foreach (ScanSpaceItem Item in ItemList)
+                if (Item.FontSizeList[0] == lastFontSize && Item.TypeFlags == typeFlags && Item.CharacterList.Contains(LastCharacter) && Item.CharacterList.Count > 1)
                 {
-                    Item.CharacterList.Remove(LastCharacter);
-                    Item.CharacterList.Insert(0, LastCharacter);
+                    Item.RemoveCharacter(LastCharacter);
+                    Search.PreferredLetters.Insert(0, LastCharacter);
                     break;
                 }
         }
     }
 
-    private static ScanSpace? OtherLetterScanSpace = null;
+    private static int SortBySingleThenCharacterPreference(ScanSpaceItem item1, ScanSpaceItem item2)
+    {
+        if (item1.IsSingle && !item2.IsSingle)
+            return 1;
+        else if (!item1.IsSingle && item2.IsSingle)
+            return -1;
+        else
+            return item2.CharacterPreference - item1.CharacterPreference;
+    }
     #endregion
 }
