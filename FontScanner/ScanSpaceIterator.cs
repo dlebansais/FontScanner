@@ -54,14 +54,16 @@ public class ScanSpaceIterator
 
             LetterType CurrentLetterType = new(FontSize, IsBlue, IsItalic, IsBold);
 
-            Debug.Assert(CharacterIndex >= 0 && CharacterIndex < Item.CharacterList.Count + Item.SuperscriptList.Count);
+            Debug.Assert(CharacterIndex >= 0 && CharacterIndex < Item.CharacterList.Count + Item.SuperscriptList.Count + Item.SubscriptList.Count);
 
             Letter Result;
 
             if (CharacterIndex < Item.CharacterList.Count)
                 Result = new(Item.CharacterList[CharacterIndex], CurrentLetterType);
-            else
+            else if (CharacterIndex < Item.CharacterList.Count + Item.SuperscriptList.Count)
                 Result = new(Item.SuperscriptList[CharacterIndex - Item.CharacterList.Count], CurrentLetterType);
+            else
+                Result = new(Item.SubscriptList[CharacterIndex - Item.CharacterList.Count - Item.SuperscriptList.Count], CurrentLetterType);
 
             return Result;
         }
@@ -116,30 +118,6 @@ public class ScanSpaceIterator
         return MoveNextInternal(option);
     }
 
-    public bool MoveNextSingleOnly()
-    {
-        do
-        {
-            if (!MoveNextInternal(IteratorMoveOption.SingleOnly))
-                return false;
-        }
-        while (!ItemList[ItemIndex].IsSingle);
-
-        return true;
-    }
-
-    public bool MoveNextPartialOnly()
-    {
-        do
-        {
-            if (!MoveNextInternal(IteratorMoveOption.PartialOnly))
-                return false;
-        }
-        while (ItemList[ItemIndex].IsSingle);
-
-        return true;
-    }
-
     private bool MoveNextInternal(IteratorMoveOption option)
     {
         if (!Increment(option))
@@ -148,7 +126,7 @@ public class ScanSpaceIterator
         Debug.Assert(ItemIndex >= 0 && ItemIndex < ItemList.Count);
         ScanSpaceItem Item = ItemList[ItemIndex];
 
-        Debug.Assert(CharacterIndex < Item.CharacterList.Count + Item.SuperscriptList.Count);
+        Debug.Assert(CharacterIndex < Item.CharacterList.Count + Item.SuperscriptList.Count + Item.SubscriptList.Count);
         Debug.Assert(FontSizeIndex < Item.FontSizeList.Count);
 
         if (HighestCharacterPreferenceReached < Item.CharacterPreference)
@@ -211,7 +189,7 @@ public class ScanSpaceIterator
 
         CharacterIndex++;
 
-        if (CharacterIndex >= Item.CharacterList.Count + Item.SuperscriptList.Count)
+        if (CharacterIndex >= Item.CharacterList.Count + Item.SuperscriptList.Count + Item.SubscriptList.Count)
             return IncrementToNextFontSize();
         else
             return true;

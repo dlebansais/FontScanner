@@ -21,12 +21,15 @@ public static class CellLoader
         '‒', 'œ', '—', '…', '“', '”', 'ŵ', '‘', 'ᾱ', 'ῑ', 'ῡ', 'ʿ', 'ḥ', 'ṣ', '’', '•',
     };
 
-    // TODO: 
-
-
     public static readonly List<string> AllSuperscripts = new()
     {
         "th", "st", "nd", "+®",
+    };
+
+    // TODO: subscript
+    public static readonly List<string> AllSubscripts = new()
+    {
+        "-2", // As in 'CO2'
     };
 
     public static readonly string FirstLetters =
@@ -60,11 +63,29 @@ public static class CellLoader
             }
         }
 
-        foreach (string Superscripts in AllSuperscripts)
+        foreach (string Superscript in AllSuperscripts)
         {
             FontBitmapCell BitmapCell = new() { Row = Row, Column = Column };
-            string Text = Superscripts;
-            bool IsSingleGlyph = Superscripts.Length <= 1 || Superscripts[0] == '+';
+            string Text = Superscript;
+            bool IsSingleGlyph = Superscript.Length <= 1 || Superscript[0] == '+';
+            FontCellTable.Add(new Letter(Text, LetterType.Normal, isWhitespace: false, IsSingleGlyph), BitmapCell);
+            FontCellTable.Add(new Letter(Text, LetterType.Italic, isWhitespace: false, IsSingleGlyph), BitmapCell);
+            FontCellTable.Add(new Letter(Text, LetterType.Bold, isWhitespace: false, IsSingleGlyph), BitmapCell);
+            FontCellTable.Add(new Letter(Text, LetterType.ItalicBold, isWhitespace: false, IsSingleGlyph), BitmapCell);
+
+            Column++;
+            if (Column >= 20)
+            {
+                Column = 0;
+                Row++;
+            }
+        }
+
+        foreach (string Subscript in AllSubscripts)
+        {
+            FontBitmapCell BitmapCell = new() { Row = Row, Column = Column };
+            string Text = Subscript;
+            bool IsSingleGlyph = Subscript.Length <= 1 || Subscript[0] == '-';
             FontCellTable.Add(new Letter(Text, LetterType.Normal, isWhitespace: false, IsSingleGlyph), BitmapCell);
             FontCellTable.Add(new Letter(Text, LetterType.Italic, isWhitespace: false, IsSingleGlyph), BitmapCell);
             FontCellTable.Add(new Letter(Text, LetterType.Bold, isWhitespace: false, IsSingleGlyph), BitmapCell);

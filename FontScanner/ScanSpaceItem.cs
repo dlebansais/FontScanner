@@ -17,6 +17,8 @@ public class ScanSpaceItem
         CharacterList = _CharacterList.AsReadOnly();
         _FontSizeList = new();
         FontSizeList = _FontSizeList.AsReadOnly();
+        SuperscriptList = new List<string>();
+        SubscriptList = new List<string>();
         _DebugText = BuildDebugText();
     }
 
@@ -33,6 +35,8 @@ public class ScanSpaceItem
         CharacterPreference = characterPreference;
         _FontSizeList = new();
         FontSizeList = _FontSizeList.AsReadOnly();
+        SuperscriptList = new List<string>();
+        SubscriptList = new List<string>();
         _DebugText = BuildDebugText();
     }
 
@@ -46,6 +50,8 @@ public class ScanSpaceItem
         _FontSizeList = fontSizeList;
         FontSizeList = _FontSizeList.AsReadOnly();
         FontPreference = fontPreference;
+        SuperscriptList = new List<string>();
+        SubscriptList = new List<string>();
         _DebugText = BuildDebugText();
     }
 
@@ -63,6 +69,8 @@ public class ScanSpaceItem
         _FontSizeList = fontSizeList;
         FontSizeList = _FontSizeList.AsReadOnly();
         FontPreference = fontPreference;
+        SuperscriptList = new List<string>();
+        SubscriptList = new List<string>();
         _DebugText = BuildDebugText();
     }
 
@@ -78,6 +86,7 @@ public class ScanSpaceItem
         FontSizeList = primaryItem.FontSizeList;
         FontPreference = primaryItem.FontPreference;
         SuperscriptList = primaryItem.SuperscriptList;
+        SubscriptList = primaryItem.SubscriptList;
         _DebugText = BuildDebugText();
     }
 
@@ -94,11 +103,12 @@ public class ScanSpaceItem
     private List<char> _CharacterList;
     public CharacterPreferenceNew CharacterPreference { get; }
     public List<string> SuperscriptList { get; } = new();
+    public List<string> SubscriptList { get; } = new();
     public IReadOnlyList<double> FontSizeList { get; }
     private List<double> _FontSizeList;
     public FontPreference FontPreference { get; }
 
-    public bool IsValid { get { return (CharacterList.Count > 0 || SuperscriptList.Count > 0) && FontSizeList.Count > 0; } }
+    public bool IsValid { get { return (CharacterList.Count > 0 || SuperscriptList.Count > 0 || SubscriptList.Count > 0) && FontSizeList.Count > 0; } }
 
     public bool IsWithinSpace(char c, TypeFlags typeFlags, bool isSingle, double fontSize)
     {
@@ -111,9 +121,9 @@ public class ScanSpaceItem
         return true;
     }
 
-    public bool IsWithinSpace(string superscript, TypeFlags typeFlags, bool isSingle, double fontSize)
+    public bool IsWithinSpace(string text, TypeFlags typeFlags, bool isSingle, double fontSize)
     {
-        if (!SuperscriptList.Contains(superscript))
+        if (!SuperscriptList.Contains(text) && !SubscriptList.Contains(text))
             return false;
 
         if (!IsWithinSpace(typeFlags, isSingle, fontSize))
@@ -145,6 +155,12 @@ public class ScanSpaceItem
     public void AddSuperscripts(List<string> superscriptList)
     {
         SuperscriptList.AddRange(superscriptList);
+        _DebugText = BuildDebugText();
+    }
+
+    public void AddSubscripts(List<string> subscriptList)
+    {
+        SubscriptList.AddRange(subscriptList);
         _DebugText = BuildDebugText();
     }
 
@@ -194,20 +210,25 @@ public class ScanSpaceItem
 
         string CharacterInterval = GetInterval(RemoveNotDisplayable(_CharacterList), RemoveNotDisplayable(CellLoader.AllCharacters), SortByOrderInAllCharacters);
         string SuperscriptInterval = GetInterval(SuperscriptList, CellLoader.AllSuperscripts, SortByOrderInAllSuperscripts);
+        string SubscriptInterval = GetInterval(SubscriptList, CellLoader.AllSubscripts, SortByOrderInAllSubscripts);
 
-        string TextInterval;
-        if (CharacterInterval.Length == 0)
+        string TextInterval = string.Empty;
+
+        if (CharacterInterval.Length > 0)
+            TextInterval += CharacterInterval;
+
+        if (SuperscriptInterval.Length > 0)
         {
-            Debug.Assert(SuperscriptInterval.Length > 0);
-            TextInterval = SuperscriptInterval;
+            if (TextInterval.Length > 0)
+                TextInterval += " and ";
+            TextInterval += SuperscriptInterval;
         }
-        else if (SuperscriptInterval.Length == 0)
+
+        if (SubscriptInterval.Length > 0)
         {
-            TextInterval = CharacterInterval;
-        }
-        else
-        {
-            TextInterval = $"{CharacterInterval} and {SuperscriptInterval}";
+            if (TextInterval.Length > 0)
+                TextInterval += " and ";
+            TextInterval += SubscriptInterval;
         }
 
         string TypeFlagsText = string.Empty;
@@ -352,5 +373,10 @@ public class ScanSpaceItem
     private static int SortByOrderInAllSuperscripts(string item1, string item2)
     {
         return CellLoader.AllSuperscripts.IndexOf(item1) - CellLoader.AllSuperscripts.IndexOf(item2);
+    }
+
+    private static int SortByOrderInAllSubscripts(string item1, string item2)
+    {
+        return CellLoader.AllSubscripts.IndexOf(item1) - CellLoader.AllSubscripts.IndexOf(item2);
     }
 }

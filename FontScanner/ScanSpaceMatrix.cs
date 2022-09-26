@@ -44,6 +44,8 @@ public class ScanSpaceMatrix
 
     public bool MainMoveNext()
     {
+        int OldMainItemIndex = MainIterator.ItemIndex;
+
         if (MainIterator.IsAtLastCharacterOfCurrentItem && ItemToResetAtWhenCompatible is not null)
         {
             if (MainIterator.IsItemCompatibleWith(ItemToResetAtWhenCompatible))
@@ -87,6 +89,12 @@ public class ScanSpaceMatrix
 
             if (!AllSecondaryIteratorsCompleted)
                 ItemToResetAtWhenCompatible = MainIterator.ItemList[MainIterator.ItemList.Count - 1];
+        }
+
+        int NewMainItemIndex = MainIterator.ItemIndex;
+        if (NewMainItemIndex != OldMainItemIndex && NewMainItemIndex < MainIterator.ItemList.Count)
+        {
+            Debug.Assert(!MainItem.IsSingle || ReachedMainIndex == MainIterator.ItemIndex);
         }
 
         return true;

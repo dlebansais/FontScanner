@@ -214,7 +214,8 @@ public static class ScanSpaceHelper
         FontPreference FontPreference = isPreferredFont ? FontPreference.Preferred : FontPreference.OtherUsed;
 
         ScanSpaceItem NewItem = new(font, typeFlags, isSingle, CharacterList, CharacterPreference, FontSizeList, FontPreference);
-        NewItem.SuperscriptList.AddRange(CellLoader.AllSuperscripts);
+        NewItem.AddSuperscripts(CellLoader.AllSuperscripts);
+        NewItem.AddSubscripts(CellLoader.AllSubscripts);
 
         itemList.Add(NewItem);
     }
@@ -235,6 +236,7 @@ public static class ScanSpaceHelper
         ScanSpaceItem NewItem = new(font, typeFlags, isSingle);
         NewItem.AddCharacters(NonWhitespaceCharacterList);
         NewItem.AddSuperscripts(CellLoader.AllSuperscripts);
+        NewItem.AddSubscripts(CellLoader.AllSubscripts);
         NewItem.AddFontSizes(FontSizeList);
 
         itemList.Add(NewItem);
@@ -250,6 +252,7 @@ public static class ScanSpaceHelper
         ScanSpaceItem NewItem = new(font, typeFlags, isSingle);
         NewItem.AddCharacters(NonWhitespaceCharacterList);
         NewItem.AddSuperscripts(CellLoader.AllSuperscripts);
+        NewItem.AddSubscripts(CellLoader.AllSubscripts);
         NewItem.AddFontSizes(font.FontSizeList);
 
         itemList.Add(NewItem);
@@ -406,7 +409,7 @@ public static class ScanSpaceHelper
         List<ScanSpaceItem> MovedItemList = new();
 
         foreach (ScanSpaceItem Item in ItemList)
-            if (Item.FontSizeList[0] == lastFontSize && Item.TypeFlags == typeFlags)
+            if (Item.FontSizeList[0] == lastFontSize && Item.TypeFlags == typeFlags && Item.FontPreference <= FontPreference.OtherUsed)
                 MovedItemList.Add(Item);
 
         MovedItemList.Sort(SortBySingleThenCharacterPreference);

@@ -89,7 +89,7 @@ public static partial class PageScanner
         return true;
     }
 
-    static bool DebugIterator = false;
+    static bool DebugIterator = true;
 
     private static bool ScanLetter(Font font, Page page, LetterSkimmer skimmer)
     {
@@ -133,6 +133,10 @@ public static partial class PageScanner
             {
                 OldItemIndex = ItemIndex;
                 MainIndexIncrement++;
+
+                if (ItemIndex >= 12)
+                {
+                }
 
                 if (MainIndexIncrement >= 3)
                 {
@@ -225,7 +229,7 @@ public static partial class PageScanner
 
         bool IsSuperscript = MainLetter.Text == "th";
 
-        if (MainLetter.Text == "*" && !MainLetter.IsItalic && !MainLetter.IsBold && !LetterType.IsBlue && LetterType.FontSize == 109)
+        if (MainLetter.Text == "*" && !MainLetter.IsItalic && !MainLetter.IsBold && !LetterType.IsBlue && LetterType.FontSize == 91)
         {
             if (DisplayDebug)
                 DebugPrintArray(MergedArray);
@@ -406,8 +410,8 @@ public static partial class PageScanner
                 {
                     OldCurrentItem = CurrentItem;
 
-                    if (DebugIterator)
-                        Debug.WriteLine($"Secondary Item: {CurrentItem.DebugText}");
+                    //if (DebugIterator)
+                    //    Debug.WriteLine($"Secondary Item: {CurrentItem.DebugText}");
                 }
 
                 IsMatch = ScanNextCharacter(font, page, scanSpaceMatrix, remainingArray, skimmer, verticalOffset, MainLetter, MergedArray, MaxInside);

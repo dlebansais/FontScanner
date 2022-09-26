@@ -10,7 +10,7 @@ public class ScanSpaceSearch
     }
 
     public List<double> PreferredLetterFontSizeList = new() { 109 };
-    public List<double> UsedLetterFontSizeList = new() { 154, 166, 211 };
+    public List<double> UsedLetterFontSizeList = new() { 211, 91, 154, 166 };
 
     public List<char> PreferredLetters = new()
     {

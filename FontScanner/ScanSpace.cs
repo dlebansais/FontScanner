@@ -37,7 +37,7 @@ public class ScanSpace
             if (!LetterHelper.IsWhitespace(c))
                 NonWhitespaceCharacterList.Add(c);
 
-        int CharacterCount = NonWhitespaceCharacterList.Count + CellLoader.AllSuperscripts.Count;
+        int CharacterCount = NonWhitespaceCharacterList.Count + CellLoader.AllSuperscripts.Count + CellLoader.AllSubscripts.Count;
 
         int TypeFlagBits = typeof(TypeFlags).GetEnumValues().Length - 1;
         int TypeFlagCount = (1 << TypeFlagBits) - 1;
@@ -73,8 +73,10 @@ public class ScanSpace
                             bool IsWithinSpace;
                             if (i < NonWhitespaceCharacterList.Count)
                                 IsWithinSpace = Item.IsWithinSpace(NonWhitespaceCharacterList[i], TypeFlags, IsSingle, FontSize);
-                            else
+                            else if (i < NonWhitespaceCharacterList.Count + CellLoader.AllSuperscripts.Count)
                                 IsWithinSpace = Item.IsWithinSpace(CellLoader.AllSuperscripts[i - NonWhitespaceCharacterList.Count], TypeFlags, IsSingle, FontSize);
+                            else
+                                IsWithinSpace = Item.IsWithinSpace(CellLoader.AllSubscripts[i - NonWhitespaceCharacterList.Count - CellLoader.AllSuperscripts.Count], TypeFlags, IsSingle, FontSize);
 
                             if (IsWithinSpace)
                             {
