@@ -203,6 +203,11 @@ public class ScanSpaceItem
 
     private string? _DebugText;
 
+    public void RefreshDebugText()
+    {
+        _DebugText = BuildDebugText();
+    }
+
     private string BuildDebugText()
     {
         if (!IsValid)

@@ -9,6 +9,7 @@ using Bitmap = System.Drawing.Bitmap;
 using System.Windows.Input;
 using System.Threading;
 using System.Globalization;
+using System.Windows.Media.Media3D;
 
 public static partial class PageScanner
 {
@@ -51,40 +52,46 @@ public static partial class PageScanner
         }
         else
         {
-            Rectangle PreviousRect = new();
-            int RectIndex = -1;
+            MergeUnparsedRectangle(page, rect);
+        }
+    }
 
-            for (int i = 0; i < page.FigureList.Count; i++)
+    private static void MergeUnparsedRectangle(Page page, Rectangle rect)
+    {
+        Rectangle PreviousRect = new();
+        int RectIndex = -1;
+
+        for (int i = 0; i < page.FigureList.Count; i++)
+        {
+            Rectangle OtherRect = page.FigureList[i];
+            if (OtherRect.Bottom <= rect.Top && (RectIndex < 0 || PreviousRect.Bottom < OtherRect.Bottom))
             {
-                Rectangle OtherRect = page.FigureList[i];
-                if (OtherRect.Bottom <= rect.Top && (RectIndex < 0 || PreviousRect.Bottom < OtherRect.Bottom))
-                {
-                    PreviousRect = OtherRect;
-                    RectIndex = i;
-                }
+                PreviousRect = OtherRect;
+                RectIndex = i;
             }
+        }
 
-            int Left, Top, Width, Height;
-            Rectangle MergedRect;
+        int Left, Top, Width, Height;
+        Rectangle MergedRect;
 
-            if (RectIndex >= 0)
+        if (RectIndex >= 0)
+        {
+            if (CanMergeRect(page, PreviousRect, rect))
             {
-                if (CanMergeRect(page, PreviousRect, rect))
-                {
-                    Left = PreviousRect.Left < rect.Left ? PreviousRect.Left : rect.Left;
-                    Width = (PreviousRect.Right > rect.Right ? PreviousRect.Right : rect.Right) - Left;
-                    Top = PreviousRect.Top;
-                    Height = rect.Bottom - Top;
+                Left = PreviousRect.Left < rect.Left ? PreviousRect.Left : rect.Left;
+                Width = (PreviousRect.Right > rect.Right ? PreviousRect.Right : rect.Right) - Left;
+                Top = PreviousRect.Top;
+                Height = rect.Bottom - Top;
 
-                    MergedRect = new(Left, Top, Width, Height);
-                    page.FigureList[RectIndex] = MergedRect;
-                }
-                else
-                    page.FigureList.Add(rect);
+                MergedRect = new(Left, Top, Width, Height);
+                page.FigureList[RectIndex] = MergedRect;
             }
             else
                 page.FigureList.Add(rect);
         }
+        else
+            page.FigureList.Add(rect);
+
     }
 
     private static bool CanMergeRect(Page page, Rectangle rect1, Rectangle rect2)

@@ -72,6 +72,7 @@ public class Page
     public List<ScanWord> WordList { get; }
     public List<Rectangle> FigureList { get; }
     public int SectionIndex { get; private set; }
+    public int PageIndex { get; set; }
     public int Progress { get; private set; }
     public int Total { get; private set; }
     public int PageTop { get; }

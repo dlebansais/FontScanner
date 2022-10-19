@@ -271,6 +271,29 @@ public static class ScanSpaceHelper
         NextSearch.InitializePreferredFonts(preferredFontSizeList);
     }
 
+    public static void CollectUsedFonts(List<double> fontSizeList)
+    {
+        foreach (double FontSize in FirstSearch.PreferredLetterFontSizeList)
+            AddUsedFonts(fontSizeList, FontSize);
+        foreach (double FontSize in OtherSearch.PreferredLetterFontSizeList)
+            AddUsedFonts(fontSizeList, FontSize);
+        foreach (double FontSize in FirstSearch.UsedLetterFontSizeList)
+            AddUsedFonts(fontSizeList, FontSize);
+        foreach (double FontSize in OtherSearch.UsedLetterFontSizeList)
+            AddUsedFonts(fontSizeList, FontSize);
+
+        foreach (double FontSize in NextSearch.PreferredLetterFontSizeList)
+            AddUsedFonts(fontSizeList, FontSize);
+        foreach (double FontSize in NextSearch.UsedLetterFontSizeList)
+            AddUsedFonts(fontSizeList, FontSize);
+    }
+
+    private static void AddUsedFonts(List<double> fontSizeList, double fontSize)
+    {
+        if (!fontSizeList.Contains(fontSize))
+            fontSizeList.Add(fontSize);
+    }
+
     public static void OptimizeFromLastScan(Font font, LetterSkimmer skimmer, ScanInfo scanInfo)
     {
         if (skimmer.IsFirstLetter)
@@ -381,12 +404,17 @@ public static class ScanSpaceHelper
         {
             Debug.Assert(Search.UsedLetterFontSizeList.Count > 1);
             Search.UsedLetterFontSizeList.Remove(lastFontSize);
+
+            foreach (ScanSpaceItem Item in ItemList)
+                Item.RefreshDebugText();
         }
         else
         {
             foreach (ScanSpaceItem Item in ItemList)
                 if (Item.FontSizeList != Search.PreferredLetterFontSizeList && Item.FontSizeList != Search.UsedLetterFontSizeList)
                     Item.RemoveFontSize(lastFontSize);
+                else
+                    Item.RefreshDebugText();
         }
     }
 

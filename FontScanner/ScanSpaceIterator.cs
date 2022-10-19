@@ -201,12 +201,23 @@ public class ScanSpaceIterator
         ScanSpaceItem Item = ItemList[ItemIndex];
 
         CharacterIndex = 0;
-        FontSizeIndex++;
 
-        if (FontSizeIndex >= Item.FontSizeList.Count)
-            return IncrementToNextItem();
-        else
-            return true;
+        List<double> AllowedFontSizeList = ScanSpace.Search.AllowedFontSizeList;
+
+        for(;;)
+        {
+            FontSizeIndex++;
+
+            if (FontSizeIndex >= Item.FontSizeList.Count)
+                return IncrementToNextItem();
+            else
+            {
+                double FontSize = Item.FontSizeList[FontSizeIndex];
+
+                if (AllowedFontSizeList.Contains(FontSize))
+                    return true;
+            }
+        }
     }
 
     private bool IncrementToNextItem()

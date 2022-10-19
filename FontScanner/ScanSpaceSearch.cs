@@ -9,8 +9,9 @@ public class ScanSpaceSearch
         PreferredLetters.AddRange(extraPreferredLetters);
     }
 
-    public List<double> PreferredLetterFontSizeList = new() { 109 };
-    public List<double> UsedLetterFontSizeList = new() { 211, 91, 154, 166 };
+    public List<double> PreferredLetterFontSizeList = new() { 88 }; // 109
+    public List<double> UsedLetterFontSizeList = new() { 136 }; // 211, 91, 154, 166
+    public List<double> AllowedFontSizeList = new() { 88, 91, 136 };
 
     public List<char> PreferredLetters = new()
     {

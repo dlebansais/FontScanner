@@ -14,6 +14,14 @@ using Rectangle = System.Drawing.Rectangle;
 
 public static partial class PageScanner
 {
+    public static void InitializeSkippedPages(List<int> skipPageNumberList)
+    {
+        SkipPageNumberList = skipPageNumberList;
+    }
+
+    public static List<int> SkipPageNumberList { get; set; } = new();
+    public static List<int> SkippedPageNumberList { get; set; } = new();
+
     public static bool Scan(Font font, Page page)
     {
         List<ScanLine> LineList = page.LineList;
@@ -21,14 +29,25 @@ public static partial class PageScanner
         bool IsFirstFigure = false;
         bool IsScanComplete = true;
 
-        foreach (ScanLine Line in LineList)
+        if (LineList.Count == 0)
         {
-            IsAborted = false;
+            IsFirstFigure = true;
+            page.FigureList.Clear();
 
-            if (Scan(font, page, Line))
-                UpdateScannedLineList(ScannedLineList, Line, ref IsFirstFigure);
-            else
-                UpdateFigureList(page, ScannedLineList, Line, ref IsFirstFigure, ref IsScanComplete);
+            foreach (Rectangle Rect in page.RectangleList)
+                UpdateFigureList(page, Rect, ref IsFirstFigure);
+        }
+        else
+        {
+            foreach (ScanLine Line in LineList)
+            {
+                IsAborted = false;
+
+                if (Scan(font, page, Line))
+                    UpdateScannedLineList(ScannedLineList, Line, ref IsFirstFigure);
+                else
+                    UpdateFigureList(page, ScannedLineList, Line, ref IsFirstFigure, ref IsScanComplete);
+            }
         }
 
         return IsScanComplete;
@@ -42,6 +61,8 @@ public static partial class PageScanner
 
         LetterSkimmer Skimmer = new(line);
         bool IsLineScanned = true;
+        Stopwatch Stopwatch = new Stopwatch();
+        Stopwatch.Start();
 
         do
         {
@@ -53,7 +74,7 @@ public static partial class PageScanner
 
             LastScan.LastLetterWidth = 0;
 
-            if (!Scan(font, page, SmallImage, Skimmer))
+            if (!Scan(font, page, SmallImage, Skimmer, Stopwatch))
             {
                 IsLineScanned = false;
                 break;
@@ -67,9 +88,9 @@ public static partial class PageScanner
         return IsLineScanned;
     }
 
-    private static bool Scan(Font font, Page page, PixelArray? smallImage, LetterSkimmer skimmer)
+    private static bool Scan(Font font, Page page, PixelArray? smallImage, LetterSkimmer skimmer, Stopwatch stopwatch)
     {
-        if (!ScanLetter(font, page, skimmer))
+        if (!ScanLetter(font, page, skimmer, stopwatch))
         {
             Debug.WriteLine($"Aborting section #{page.SectionIndex} page #{page.Progress} line #{skimmer.Line.LineNumber}");
 
@@ -89,9 +110,10 @@ public static partial class PageScanner
         return true;
     }
 
-    static bool DebugIterator = true;
+    static bool DebugPrimaryIterator = false;
+    static bool DebugSecondaryIterator = false;
 
-    private static bool ScanLetter(Font font, Page page, LetterSkimmer skimmer)
+    private static bool ScanLetter(Font font, Page page, LetterSkimmer skimmer, Stopwatch stopwatch)
     {
         ScanSpace PrimaryScanSpace = ScanSpaceHelper.GetPrimary(font, skimmer);
         ScanSpace SecondaryScanSpace = ScanSpaceHelper.GetSecondary(font);
@@ -124,7 +146,23 @@ public static partial class PageScanner
         while (!IsMatch && ScanSpaceMatrix.MainMoveNext())
         {
             if (IsInterrupted())
+            {
+                SkippedPageNumberList.Add(page.PageIndex);
                 break;
+            }
+
+            if (stopwatch.Elapsed > TimeSpan.FromMinutes(120))
+            {
+                while (SkipPageNumberList.Count > 0 && SkipPageNumberList[0] < page.PageIndex)
+                    SkipPageNumberList.RemoveAt(0);
+
+                if (SkipPageNumberList.Count > 0 && SkipPageNumberList[0] == page.PageIndex)
+                {
+                    SkipPageNumberList.RemoveAt(0);
+                    IsAborted = true;
+                    break;
+                }
+            }
 
             int ItemIndex = ScanSpaceMatrix.MainIterator.ItemIndex;
             CurrentItem = PrimaryScanSpace.ItemList[ItemIndex];
@@ -140,7 +178,7 @@ public static partial class PageScanner
 
                 if (MainIndexIncrement >= 3)
                 {
-                    if (DebugIterator)
+                    if (DebugPrimaryIterator)
                         Debug.WriteLine($"Item Index: {ItemIndex} {CurrentItem.DebugText}");
                 }
             }
@@ -229,7 +267,7 @@ public static partial class PageScanner
 
         bool IsSuperscript = MainLetter.Text == "th";
 
-        if (MainLetter.Text == "*" && !MainLetter.IsItalic && !MainLetter.IsBold && !LetterType.IsBlue && LetterType.FontSize == 91)
+        if (MainLetter.Text == "T" && !MainLetter.IsItalic && MainLetter.IsBold && !LetterType.IsBlue && LetterType.FontSize == 88)
         {
             if (DisplayDebug)
                 DebugPrintArray(MergedArray);
@@ -410,8 +448,8 @@ public static partial class PageScanner
                 {
                     OldCurrentItem = CurrentItem;
 
-                    //if (DebugIterator)
-                    //    Debug.WriteLine($"Secondary Item: {CurrentItem.DebugText}");
+                    if (DebugSecondaryIterator)
+                        Debug.WriteLine($"Secondary Item: {CurrentItem.DebugText}");
                 }
 
                 IsMatch = ScanNextCharacter(font, page, scanSpaceMatrix, remainingArray, skimmer, verticalOffset, MainLetter, MergedArray, MaxInside);
