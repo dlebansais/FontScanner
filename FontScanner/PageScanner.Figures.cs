@@ -89,9 +89,25 @@ public static partial class PageScanner
             else
                 page.FigureList.Add(rect);
         }
+        else if (page.FigureList.Count > 0)
+        {
+            Rectangle NextRect = page.FigureList[0];
+
+            if (CanMergeRect(page, rect, NextRect))
+            {
+                Left = rect.Left < NextRect.Left ? rect.Left : NextRect.Left;
+                Width = (rect.Right > NextRect.Right ? rect.Right : NextRect.Right) - Left;
+                Top = rect.Top;
+                Height = NextRect.Bottom - Top;
+
+                MergedRect = new(Left, Top, Width, Height);
+                page.FigureList[0] = MergedRect;
+            }
+            else
+                page.FigureList.Insert(0, rect);
+        }
         else
             page.FigureList.Add(rect);
-
     }
 
     private static bool CanMergeRect(Page page, Rectangle rect1, Rectangle rect2)

@@ -3,11 +3,8 @@
 using FontLoader;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
-using System.Text.RegularExpressions;
 using System.Threading;
-using System.Windows;
 using System.Windows.Input;
 using Font = FontLoader.Font;
 using Rectangle = System.Drawing.Rectangle;
@@ -213,7 +210,7 @@ public static partial class PageScanner
             CurrentWord.AddLetter(MainLetter, MatchRect);
             LastScan.PreviousLetter = MainLetter;
 
-            if (MainLetter.Text == "y" && MainLetter.LetterType.IsItalic)
+            if (MainLetter.Text == "F" && MainLetter.LetterType.IsItalic)
             {
             }
 
@@ -233,7 +230,7 @@ public static partial class PageScanner
         Debug.Assert(CellArray != PixelArray.Empty);
         PixelArray MergedArray;
 
-        if (LastScan.PreviousMergeArray != PixelArray.Empty && LastScan.PreviousMergeArray.Width + 3 <= CellArray.Width)
+        if (LastScan.PreviousMergeArray != PixelArray.Empty && LastScan.PreviousMergeArray.Width + 1 <= CellArray.Width)
         {
             Debug.Assert(LastScan.LastInside > 0);
             int MergeOffset = LastScan.VerticalOffset - LastScan.NextCharOffsetY;
@@ -267,7 +264,7 @@ public static partial class PageScanner
 
         bool IsSuperscript = MainLetter.Text == "th";
 
-        if (MainLetter.Text == "T" && !MainLetter.IsItalic && MainLetter.IsBold && !LetterType.IsBlue && LetterType.FontSize == 88)
+        if (MainLetter.Text == "." && MainLetter.IsItalic && !MainLetter.IsBold && !LetterType.IsBlue && LetterType.FontSize == 88)
         {
             if (DisplayDebug)
                 DebugPrintArray(MergedArray);
@@ -350,11 +347,11 @@ public static partial class PageScanner
 
         LetterType MainLetterType = MainLetter.LetterType;
 
-        if (MainLetter.Text == "4" && 
-            !MainLetterType.IsItalic &&
+        if (MainLetter.Text == "l" && 
+            MainLetterType.IsItalic &&
             !MainLetterType.IsBold &&
             !MainLetterType.IsBlue &&
-            MainLetterType.FontSize == 109)
+            MainLetterType.FontSize == 88)
         {
         }
 
@@ -385,7 +382,7 @@ public static partial class PageScanner
         if (MainLetter.Text == "\'" || MainLetter.Text == "‘" || MainLetter.Text == "’")
             MinCompatible = (int)Math.Round(((MergedArray.Width * 10) + MainLetter.LetterType.FontSize) * 0.01);
         else
-            MinCompatible = (int)Math.Round(((MergedArray.Width * 10) + MainLetter.LetterType.FontSize) * 0.025);
+            MinCompatible = (int)Math.Round(((MergedArray.Width * 10) + MainLetter.LetterType.FontSize) * 0.022);
 
         if (MinCompatible >= MergedArray.Width)
             MinCompatible = MergedArray.Width - 1;
@@ -478,11 +475,11 @@ public static partial class PageScanner
         LetterType MainLetterType = mainLetter.LetterType;
         LetterType NextLetterType = NextLetter.LetterType;
 
-        if (mainLetter.Text == "4" && NextLetter.Text == "th" &&
-            !MainLetterType.IsItalic && !NextLetterType.IsItalic &&
+        if (mainLetter.Text == "a" && NextLetter.Text == "d" &&
+            MainLetterType.IsItalic && NextLetterType.IsItalic &&
             !MainLetterType.IsBold &&   !NextLetterType.IsBold &&
             !MainLetterType.IsBlue &&   !NextLetterType.IsBlue &&
-            MainLetterType.FontSize == 109 && NextLetterType.FontSize == 154)
+            MainLetterType.FontSize == 88 && NextLetterType.FontSize == 88)
         {
         }
 
@@ -665,7 +662,7 @@ public static partial class PageScanner
                     Debug.Assert(!PreviousLetterRect.IsEmpty);
 
                     int Distance = LetterDistance(font, PreviousLetterRect.Left, PreviousLetter, LetterRect.Left, Letter);
-                    int FontWhitespaceDistance = (int)Math.Round(PreviousLetter.LetterType.FontSize * 0.119);
+                    int FontWhitespaceDistance = (int)Math.Round(PreviousLetter.LetterType.FontSize * 0.107);
 
                     if (DebugDistance)
                         Debug.Write($"{Distance}  ");
@@ -687,9 +684,10 @@ public static partial class PageScanner
 
     private static int LetterDistance(Font font, int previousLetterLeft, Letter previousLetter, int nextLetterLeft, Letter nextLetter)
     {
+        bool IsItalic = previousLetter.LetterType.IsItalic || nextLetter.LetterType.IsItalic;
         PixelArray PreviousArray = font.CharacterTable[previousLetter];
         PixelArray NextArray = font.CharacterTable[nextLetter];
-        int LetterDistance = PixelArrayHelper.Distance(PreviousArray, NextArray);
+        int LetterDistance = IsItalic ? PixelArrayHelper.Distance(PreviousArray, NextArray) : PixelArrayHelper.MaxMinDistance(PreviousArray, NextArray);
         int OffsetDistance = nextLetterLeft - previousLetterLeft - PreviousArray.Width;
 
         return LetterDistance + OffsetDistance;

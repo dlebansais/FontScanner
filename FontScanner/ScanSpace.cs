@@ -21,7 +21,7 @@ public class ScanSpace
     public List<ScanSpaceItem> ItemList { get; }
     public ScanSpaceSearch Search { get; }
 
-    private bool IsItemListValid(Font font, List<ScanSpaceItem> itemList, bool isSingleOnly)
+    public static bool IsItemListValid(Font font, List<ScanSpaceItem> itemList, bool isSingleOnly)
     {
         if (itemList.Count == 0)
             return false;
