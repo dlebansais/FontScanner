@@ -22,7 +22,7 @@ public class ScanSpaceItem
         _DebugText = BuildDebugText();
     }
 
-    public ScanSpaceItem(Font font, TypeFlags typeFlags, bool isSingle, List<char> characterList, CharacterPreferenceNew characterPreference)
+    public ScanSpaceItem(Font font, TypeFlags typeFlags, bool isSingle, List<char> characterList, CharacterPreference characterPreference)
     {
         foreach (char c in characterList)
             Debug.Assert(!LetterHelper.IsWhitespace(c));
@@ -55,7 +55,7 @@ public class ScanSpaceItem
         _DebugText = BuildDebugText();
     }
 
-    public ScanSpaceItem(Font font, TypeFlags typeFlags, bool isSingle, List<char> characterList, CharacterPreferenceNew characterPreference, List<double> fontSizeList, FontPreference fontPreference)
+    public ScanSpaceItem(Font font, TypeFlags typeFlags, bool isSingle, List<char> characterList, CharacterPreference characterPreference, List<double> fontSizeList, FontPreference fontPreference)
     {
         foreach (char c in characterList)
             Debug.Assert(!LetterHelper.IsWhitespace(c));
@@ -101,7 +101,7 @@ public class ScanSpaceItem
     public bool IsSingle { get; }
     public IReadOnlyList<char> CharacterList { get; }
     private List<char> _CharacterList;
-    public CharacterPreferenceNew CharacterPreference { get; }
+    public CharacterPreference CharacterPreference { get; }
     public List<string> SuperscriptList { get; } = new();
     public List<string> SubscriptList { get; } = new();
     public IReadOnlyList<double> FontSizeList { get; }

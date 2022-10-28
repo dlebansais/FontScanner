@@ -206,7 +206,7 @@ public class Page
         foreach (BigLetter BigLetter in BigLetterList)
         {
             PixelArray LetterArray = BigLetter.LetterArray;
-            if (LetterArray.Width == 0 || LetterArray.Height == 0)
+            if (LetterArray.SourceBitmap is null || LetterArray.Width == 0 || LetterArray.Height == 0)
                 continue;
 
             if (BigLetter.Text == 'F')

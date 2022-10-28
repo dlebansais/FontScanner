@@ -45,14 +45,11 @@ public class TestPageScanner
     {
         Dictionary<Letter, FontBitmapCell> FontCellTable = new();
 
-        FontCellTable.Add(Letter.SubscriptReserved, new FontBitmapCell() { Row = 4, Column = 16 });
         FillTestTable(FontCellTable, '£', new FontBitmapCell() { Row = 4, Column = 17 });
         FillTestTable(FontCellTable, '□', new FontBitmapCell() { Row = 4, Column = 18 });
         FillTestTable(FontCellTable, '₂', new FontBitmapCell() { Row = 5, Column = 0 });
         FillTestTable(FontCellTable, '©', new FontBitmapCell() { Row = 5, Column = 3 });
         FillTestTable(FontCellTable, '«', new FontBitmapCell() { Row = 5, Column = 5 });
-        FontCellTable.Add(Letter.Combo3, new FontBitmapCell() { Row = 5, Column = 6 });
-        FontCellTable.Add(Letter.Combo4, new FontBitmapCell() { Row = 5, Column = 7 });
         FillTestTable(FontCellTable, '®', new FontBitmapCell() { Row = 5, Column = 8 });
         FillTestTable(FontCellTable, 'ȕ', new FontBitmapCell() { Row = 5, Column = 16 });
         FillTestTable(FontCellTable, '•', new FontBitmapCell() { Row = 5, Column = 17 });
@@ -96,13 +93,8 @@ public class TestPageScanner
         FillTestTable(FontCellTable, '“', new FontBitmapCell() { Row = 11, Column = 4 });
         FillTestTable(FontCellTable, '”', new FontBitmapCell() { Row = 11, Column = 5 });
         FillTestTable(FontCellTable, 'ŵ', new FontBitmapCell() { Row = 11, Column = 6 });
-        FontCellTable.Add(Letter.Ignore1, new FontBitmapCell() { Row = 11, Column = 7 });
         FillTestTable(FontCellTable, 'þ', new FontBitmapCell() { Row = 11, Column = 8 });
         FillTestTable(FontCellTable, '‘', new FontBitmapCell() { Row = 11, Column = 9 });
-        FontCellTable.Add(Letter.Combo1, new FontBitmapCell() { Row = 11, Column = 10 });
-        FontCellTable.Add(Letter.Combo2, new FontBitmapCell() { Row = 11, Column = 11 });
-        FontCellTable.Add(Letter.SpecialJ, new FontBitmapCell() { Row = 11, Column = 12 });
-        FontCellTable.Add(Letter.SpecialJItalic, new FontBitmapCell() { Row = 11, Column = 12 });
         FillTestTable(FontCellTable, 'ᾱ', new FontBitmapCell() { Row = 11, Column = 13 });
         FillTestTable(FontCellTable, 'ῑ', new FontBitmapCell() { Row = 11, Column = 14 });
         FillTestTable(FontCellTable, 'ῡ', new FontBitmapCell() { Row = 11, Column = 15 });

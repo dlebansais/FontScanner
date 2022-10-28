@@ -649,6 +649,7 @@ public static partial class PageScanner
         Letter PreviousLetter = Letter.EmptyNormal;
         Rectangle PreviousLetterRect = new();
         bool DebugDistance = false;
+        bool DebugDistanceLarge = false;
 
         foreach (ScanWord Word in line.Words)
         {
@@ -661,14 +662,21 @@ public static partial class PageScanner
                 {
                     Debug.Assert(!PreviousLetterRect.IsEmpty);
 
-                    int Distance = LetterDistance(font, PreviousLetterRect.Left, PreviousLetter, LetterRect.Left, Letter);
-                    int FontWhitespaceDistance = (int)Math.Round(PreviousLetter.LetterType.FontSize * 0.107);
-
-                    if (DebugDistance)
-                        Debug.Write($"{Distance}  ");
+                    double Distance = LetterDistance(font, PreviousLetterRect.Left, PreviousLetter, LetterRect.Left, Letter);
+                    double FontWhitespaceDistance = (int)Math.Round(PreviousLetter.LetterType.FontSize * 0.119);
 
                     if (Distance >= FontWhitespaceDistance)
+                    {
+                        if (DebugDistanceLarge)
+                            Debug.Write($"{Math.Round(Distance, 2)}/{Math.Round(FontWhitespaceDistance, 2)}  ");
+
                         line.LetterList.Add(Letter.Whitespace);
+                    }
+                    else
+                    {
+                        if (DebugDistance)
+                            Debug.Write($"{Math.Round(Distance, 2)}  ");
+                    }
                 }
 
                 line.LetterList.Add(Letter);
@@ -678,75 +686,19 @@ public static partial class PageScanner
             }
         }
 
-        if (DebugDistance)
+        if (DebugDistance || DebugDistanceLarge)
             Debug.WriteLine("");
     }
 
-    private static int LetterDistance(Font font, int previousLetterLeft, Letter previousLetter, int nextLetterLeft, Letter nextLetter)
+    private static double LetterDistance(Font font, int previousLetterLeft, Letter previousLetter, int nextLetterLeft, Letter nextLetter)
     {
         bool IsItalic = previousLetter.LetterType.IsItalic || nextLetter.LetterType.IsItalic;
         PixelArray PreviousArray = font.CharacterTable[previousLetter];
         PixelArray NextArray = font.CharacterTable[nextLetter];
-        int LetterDistance = IsItalic ? PixelArrayHelper.Distance(PreviousArray, NextArray) : PixelArrayHelper.MaxMinDistance(PreviousArray, NextArray);
-        int OffsetDistance = nextLetterLeft - previousLetterLeft - PreviousArray.Width;
+        double LetterDistance = IsItalic ? PixelArrayHelper.Distance(PreviousArray, NextArray) : PixelArrayHelper.MaxMinDistance(PreviousArray, NextArray);
+        double OffsetDistance = nextLetterLeft - previousLetterLeft - PreviousArray.Width;
 
         return LetterDistance + OffsetDistance;
-    }
-
-    private static void MergeWordsAndWhitespaceOld(ScanLine line)
-    {
-        int i = 0;
-        while (i + 1 < line.Words.Count)
-        {
-            ScanWord PreviousWord = line.Words[i];
-            ScanWord NextWord = line.Words[i + 1];
-
-            int SeparatorWidth = 7;
-
-            for (int j = 0; j < PreviousWord.Text.Count; j++)
-            {
-                Letter Letter = PreviousWord.Text[PreviousWord.Text.Count - j - 1];
-
-                if (Letter != Letter.Whitespace)
-                {
-                    if (Letter.LetterType.IsItalic)
-                        SeparatorWidth = (int)(Letter.LetterType.FontSize * 0.2);
-                    else if (Letter.LetterType.IsBold)
-                        SeparatorWidth = (int)(Letter.LetterType.FontSize * 0.37);
-                    else
-                        SeparatorWidth = (int)(Letter.LetterType.FontSize * 0.35);
-                    break;
-                }
-            }
-
-            if (PreviousWord.EffectiveRect.Right + SeparatorWidth >= NextWord.EffectiveRect.Left)
-            {
-                int Left = PreviousWord.Rect.Left;
-                int Top = PreviousWord.Rect.Top < NextWord.Rect.Top ? PreviousWord.Rect.Top : NextWord.Rect.Top;
-                int Right = NextWord.Rect.Right;
-                int Bottom = PreviousWord.Rect.Bottom > NextWord.Rect.Bottom ? PreviousWord.Rect.Bottom : NextWord.Rect.Bottom;
-                Rectangle MergedRect = new(Left, Top, Right - Left, Bottom - Top);
-
-                ScanWord MergedWord = new(MergedRect, line);
-                MergedWord.LetterOffsetList.AddRange(PreviousWord.LetterOffsetList);
-
-                for (int j = 0; j < NextWord.LetterOffsetList.Count; j++)
-                {
-                    LetterOffset NextOffset = NextWord.LetterOffsetList[j];
-                    NextOffset.Offset += NextWord.Rect.Left - PreviousWord.Rect.Left;
-
-                    MergedWord.LetterOffsetList.Add(NextOffset);
-                }
-
-                MergedWord.Merge(PreviousWord);
-                MergedWord.Merge(NextWord);
-
-                line.Words[i] = MergedWord;
-                line.Words.RemoveAt(i + 1);
-            }
-            else
-                i++;
-        }
     }
 
     private static int GetLineWorstRight(ScanWord word, LetterOffset letterOffset)

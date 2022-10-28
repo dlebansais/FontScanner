@@ -193,7 +193,7 @@ public static class ScanSpaceHelper
     private static void AddCommonLetters(List<ScanSpaceItem> itemList, Font font, ScanSpaceSearch search, TypeFlags typeFlags, bool isSingle, bool isPreferredFont)
     {
         List<char> CharacterList = search.PreferredLetters;
-        CharacterPreferenceNew CharacterPreference = CharacterPreferenceNew.Preferred;
+        CharacterPreference CharacterPreference = CharacterPreference.Preferred;
         List<double> FontSizeList = isPreferredFont ? search.PreferredLetterFontSizeList : search.UsedLetterFontSizeList;
         FontPreference FontPreference = isPreferredFont ? FontPreference.Preferred : FontPreference.OtherUsed;
 
@@ -208,7 +208,7 @@ public static class ScanSpaceHelper
         foreach (char c in CellLoader.AllCharacters)
             if (!search.PreferredLetters.Contains(c) && !LetterHelper.IsWhitespace(c))
                 CharacterList.Add(c);
-        CharacterPreferenceNew CharacterPreference = CharacterPreferenceNew.AllOthers;
+        CharacterPreference CharacterPreference = CharacterPreference.AllOthers;
 
         List<double> FontSizeList = isPreferredFont ? search.PreferredLetterFontSizeList : search.UsedLetterFontSizeList;
         FontPreference FontPreference = isPreferredFont ? FontPreference.Preferred : FontPreference.OtherUsed;
@@ -245,7 +245,7 @@ public static class ScanSpaceHelper
     private static void AddEverythingElse(List<ScanSpaceItem> itemList, Font font, ScanSpaceSearch search, TypeFlags typeFlags, bool isSingle)
     {
         List<char> CharacterList = search.PreferredLetters;
-        CharacterPreferenceNew CharacterPreference = CharacterPreferenceNew.Preferred;
+        CharacterPreference CharacterPreference = CharacterPreference.Preferred;
 
         ScanSpaceItem NewItemPreferredChar = new(font, typeFlags, isSingle, CharacterList, CharacterPreference);
         NewItemPreferredChar.AddFontSizes(font.FontSizeList);

@@ -19,7 +19,7 @@ public class ScanSpaceIterator
     public int ItemIndex { get; private set; }
     public int CharacterIndex { get; private set; }
     public int FontSizeIndex { get; private set; }
-    public CharacterPreferenceNew HighestCharacterPreferenceReached { get; set; }
+    public CharacterPreference HighestCharacterPreferenceReached { get; set; }
     public List<TypeFlags> HighestTypeFlagsMixReached { get; } = new();
     public FontPreference HighestFontPreferenceReached { get; set; }
 
@@ -48,11 +48,7 @@ public class ScanSpaceIterator
             double FontSize = Item.FontSizeList[FontSizeIndex];
 
             TypeFlags TypeFlags = Item.TypeFlags;
-            bool IsBlue = TypeFlags.HasFlag(TypeFlags.Blue);
-            bool IsItalic = TypeFlags.HasFlag(TypeFlags.Italic);
-            bool IsBold = TypeFlags.HasFlag(TypeFlags.Bold);
-
-            LetterType CurrentLetterType = new(FontSize, IsBlue, IsItalic, IsBold);
+            LetterType CurrentLetterType = new(FontSize, TypeFlags);
 
             Debug.Assert(CharacterIndex >= 0 && CharacterIndex < Item.CharacterList.Count + Item.SuperscriptList.Count + Item.SubscriptList.Count);
 

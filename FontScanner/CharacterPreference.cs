@@ -2,8 +2,6 @@
 
 public enum CharacterPreference
 {
-    Same,
-    ToggleItalic,
-    SameFont,
-    Other,
+    Preferred,
+    AllOthers,
 }
